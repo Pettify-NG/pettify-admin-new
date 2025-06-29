@@ -96,25 +96,14 @@ export default function HomeSlideshowTable({
     <div className='rounded-xl p-4 bg-white border border-gray-200'>
       <DataTable
         value={slideshows ?? []}
-        selectionMode={rowClick ? null : 'multiple'}
-        selection={selectedImages!}
-        onSelectionChange={selectChangeHandler}
-        dataKey='id'
-        tableStyle={{ minWidth: '50rem' }}
+        dataKey='_id'
         paginator
         paginatorTemplate={paginatorTemplate(slideshows!.length, 1)}
         paginatorClassName='flex'
-        rows={5}
+        rows={20}
         rowsPerPageOptions={[5, 25, 50, 100]}
         className='rounded-xl text-sm'
-        sortOrder={-1}
-        sortField='id'
-        sortIcon={<IoIosArrowDown />}
       >
-        <Column
-          selectionMode='multiple'
-          headerStyle={{ width: '3rem' }}
-        ></Column>
         <Column body={template} header='Image'></Column>
         <Column field='imageType' header="Type"></Column>
         <Column field='imageSize' header="Size"></Column>

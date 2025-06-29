@@ -38,15 +38,15 @@ export default async function AdminHomeSlideshow() {
       <div className='flex flex-col w-full justify-between sm:flex-row lg:items-center gap-8 my-8'>
         <div>
           <p className='text-xl font-bold mb-4 text-gray-700'>
-            Home Slideshow Images
+            Slider Images
           </p>
           <Pagination />
         </div>
 
         <Link href='/dashboard/slider-images/create'>
-          <Button>
+          <Button className='text-white'>
             <FaPlus />
-            Add Slide Image
+            Add Slider Image
           </Button>
         </Link>
       </div>

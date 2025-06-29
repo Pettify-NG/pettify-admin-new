@@ -106,7 +106,7 @@ export default function AdminNewHomeSlideshow() {
           const apiRes = await httpService.post(
             ENDPOINTS.SLIDER_IMAGES,
             {
-              image: fileRes.url,
+              image: fileRes.data.url,
             },
             `Bearer ${token}`
           );
@@ -192,7 +192,7 @@ export default function AdminNewHomeSlideshow() {
           <IoMdClose />
           Cancel
         </Button>
-        <Button onClick={addHomeSlideshow} loading={loading}>
+        <Button onClick={addHomeSlideshow} className='text-white' loading={loading}>
           Save Slider Image
         </Button>
       </div>
