@@ -1,11 +1,14 @@
-import Customers from '@/src/components/Admin/CustomersComponent/Customers'
-import React from 'react'
-import { dummyCustomer } from '@/src/interfaces/customers'
+import React from 'react';
+
+// import Customers from '@/src/components/Admin/CustomersComponent/Customers'
+// import Customers
+
 
 export default async function CustomersDashboard () {
   return (
     <section>
-        <Customers customers={dummyCustomer}/>
+        {/* <Customers customers={dummyCustomer}/> */}
+        customers
     </section>
   )
 }

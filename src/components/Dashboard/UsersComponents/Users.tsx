@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import ENDPOINTS from '@/config/ENDPOINTS';
 import Pagination from '../../Shared/Paginatioin';
 import TextInput from '../../Global/TextInput';
-import Button from '../../Global/Button';
+import Button from '@/components/Global/Button';
 import UsersTable from './UsersTable';
 import { IUser, IUsers } from '@/interfaces/users';
 import HTTPService from '@/services/http';

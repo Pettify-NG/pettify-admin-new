@@ -18,6 +18,8 @@ const ENDPOINTS = {
 
   // Users
   USER: `users/`,
+  ALL_USERS: `users`,
+  MERCHANTS: `merchants/`,
 
   // Accessory
   ACCESSORY: `accessories/`,

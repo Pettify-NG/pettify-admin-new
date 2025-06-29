@@ -1,12 +1,11 @@
-import React from 'react'
-import Merchants from '@/src/components/Admin/MerchantComponents/Merchant'
-import { dummyUsers } from '@/src/interfaces/users';
+import React from 'react';
+
+import Merchants from '@/components/Dashboard/MerchantComponents/Merchant';
 
 export default async function MerchantDashboard () {
   return (
     <section>
         <Merchants 
-          // merchants={dummyUsers}
         /> 
     </section>
   )

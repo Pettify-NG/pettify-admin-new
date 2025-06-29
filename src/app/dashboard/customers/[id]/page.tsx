@@ -2,12 +2,13 @@ import React from "react";
 import Link from "next/link";
 import { FaLongArrowAltLeft } from "react-icons/fa";
 
-import Button from "@/src/components/Global/Button";
-import Pagination from "@/src/components/Shared/Paginatioin";
-import CustomerDetails from "@/src/components/Admin/CustomersComponent/CustomerDetails";
-import { IUser } from "@/src/interfaces/users";
-import { DummyOrders } from "@/src/interfaces/orders";
-import getUserDetails from "@/src/libs/customers";
+
+// import { DummyOrders } from "@/src/interfaces/orders";
+import Button from "@/components/Global/Button";
+import Pagination from "@/components/Shared/Paginatioin";
+import CustomerDetails from "@/components/Shared/CustomersComponent/CustomerDetails";
+import { IUser } from "@/interfaces/users";
+import { getUserDetails } from "@/libs/products";
 
 export default async function CustomerDetailsPage ( { params }: { params: { id: string } } ) {
 
@@ -32,11 +33,10 @@ export default async function CustomerDetailsPage ( { params }: { params: { id: 
                 </div>
             </div>
 
-            <CustomerDetails
-                // customer={dummyUsers.find((customer: IUser) => customer.id === params.id) ?? {} as IUser}
+            {/* <CustomerDetails
                 customer={customerDetails}
                 transactionHistory={DummyOrders}
-            />
+            /> */}
         </>
     )
 }

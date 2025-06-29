@@ -16,10 +16,10 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Cookies from 'universal-cookie';
 
-import ENDPOINTS from '@/src/config/ENDPOINTS';
-import { formatCurrency, formatDate } from '@/src/helpers';
-import { IUser, IUsers } from '@/src/interfaces/users';
-import TablePaginatorTemplate from '../../Shared/TablePaginatorTemplate';
+import ENDPOINTS from '@/config/ENDPOINTS';
+import { formatCurrency, formatDate } from '@/helpers';
+import { IUser, IUsers } from '@/interfaces/users';
+import { paginatorTemplate } from '@/components/Shared/PaginatorTemplate';
 
 interface LazyTableState {
   first: number;
@@ -83,10 +83,10 @@ export default function UsersTable({
               // const baseUrl = process.env.API_BASE_URL;
               const baseUrl = "https://pettify-backend.onrender.com/api/v1"
       
-              fetch(`${baseUrl}/${ENDPOINTS.ALL_USERS}?page=${lazyState.page}&limit=${lazyState.rows}`, {
-                  // headers: {
-                  //     Authorization: `Bearer ${token}`,
-                  // },
+              fetch(`${baseUrl}/${ENDPOINTS.ALL_USERS}?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}`, {
+                  headers: {
+                      Authorization: `Bearer ${token}`,
+                  },
                   cache: 'no-store',
               }).then(response => {
                   if (!response.ok) {
@@ -255,7 +255,7 @@ export default function UsersTable({
         loading={loading}
         totalRecords={totalRecords}
         paginator
-        paginatorTemplate={TablePaginatorTemplate(totalRecords)}
+        paginatorTemplate={paginatorTemplate(totalRecords, lazyState.page)}
         showSelectAll
         selectionAutoFocus={true}
         paginatorClassName='flex justify-between'
