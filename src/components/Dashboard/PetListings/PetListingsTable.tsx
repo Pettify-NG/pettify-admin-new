@@ -198,6 +198,27 @@ export default function PetListingsTable ({
         </div>
       );
     }
+
+    function sellerTemplate(listing: IPet) {
+      return (
+        <div className='flex items-center gap-4'>
+          {listing?.seller.profileImage && checkIfUrl(listing.seller.profileImage) ? (
+            <Image
+              src={listing.seller.profileImage}
+              alt="User image"
+              width={20}
+              height={20}
+              className='h-12 w-12 bg-[#1b1b1b] rounded-md'
+            />
+          ) : (
+            <div className='h-12 w-12 bg-[#1b1b1b] rounded-md'></div>
+          )}
+          <div className='flex-1 '>
+            <p className='text-sm font-medium'>{listing?.seller.username}</p>
+          </div>
+        </div>
+      );
+    }
     
     const getListingsByDate = useMemo(() => {
       if (selectedDate) {
@@ -260,6 +281,7 @@ export default function PetListingsTable ({
         >
           {/* <Column selectionMode='multiple' headerStyle={{ width: '3rem' }} /> */}
           <Column field='listing' header='Listing' body={listingTemplate} />
+          <Column field="Seller" header="Seller" body={sellerTemplate}/>
           <Column field='gender' header='Gender' sortable />
           <Column field='category' header='Category' sortable />
           <Column field='breed' header='Breed' sortable />

@@ -1,3 +1,5 @@
+import { IUser } from "./users";
+
 export interface IPet {
     _id: string
     date_of_birth: string
@@ -5,7 +7,7 @@ export interface IPet {
     breed: string
     price: number
     quantity: number
-    seller: string
+    seller: IUser
     category: string
     color: string
     gender: string

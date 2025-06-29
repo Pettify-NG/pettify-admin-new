@@ -1,3 +1,5 @@
+import { IUser } from "./users";
+
 export default interface IOrder {
   uuid: string;
   _id: string;
@@ -33,14 +35,5 @@ export interface IProductItem {
   
 export interface OrdersResponse {
     orders: IOrder[];
-}
-
-export interface IUser {
-  _id: string
-  firstname: string
-  lastname: string
-  email: string
-  profileImage: string
-  phonenumber: string
 }
   

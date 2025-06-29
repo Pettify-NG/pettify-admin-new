@@ -14,7 +14,6 @@ export default function OrdersTable({
 }: {
   orderList: IProductItem[];
 }) {
-  console.log(orderList);
   function quantityTemplate(item: IProductItem) {
     return item.quantity;
   }
@@ -64,7 +63,8 @@ export default function OrdersTable({
     <div className='w-full'>
       <DataTable
         value={orderList}
-        dataKey='id'
+        dataKey='_id'
+        key={1}
         tableStyle={{ minWidth: '50rem' }}
         className='rounded-xl text-sm'
         sortOrder={-1}

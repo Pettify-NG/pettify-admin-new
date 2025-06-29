@@ -95,7 +95,7 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
       }
 
       httpService
-        .patch(`${ENDPOINTS.ORDERS}/${orderId}/complete`, data, `Bearer ${token}`)
+        .patch(`${ENDPOINTS.ORDERS}${orderId}/complete`, data, `Bearer ${token}`)
         .then((apiRes) => {
           console.log('Response: ', apiRes);
 
@@ -126,7 +126,7 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
   return (
     <div>
       {/* Grid 1 */}
-      <div className='grid md:grid-cols-2 xl:grid-cols-2 gap-4 mb-8'>
+      <div className='grid md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8'>
         {/* Order Details */}
         <div className='py-4 px-2 sm:p-4 border border-gray-200 bg-white rounded-xl'>
           <p className='text-lg font-medium text-gray-700 mb-8 flex items-center justify-between'>
@@ -224,6 +224,59 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
             <p>{order?.buyerPhone}</p>
           </div>
         </div>
+
+        {/* Seller Details */}
+        <div className='py-4 px-2 sm:p-4 border border-gray-200 bg-white rounded-xl'>
+          <p className='text-lg font-medium text-gray-700 mb-8'>Seller/Merchant</p>
+
+          {/*  */}
+          <div className='text-gray-600 flex items-center justify-between gap-8 mt-2 text-sm'>
+            <div className='flex items-center gap-2'>
+              <div className='h-12 w-12 bg-gray-200 border-4 border-gray-100 rounded-full flex items-center justify-center text-xl'>
+                <CiUser />
+              </div>
+              <div className='flex-1'>
+                <p>Seller/Merchant</p>
+              </div>
+            </div>
+
+            <div>
+              <p>
+                {order?.seller.firstname + " " + order?.seller.lastname}
+              </p>
+              <p>
+                {order?.seller.username}
+              </p>
+            </div>
+          </div>
+
+          {/*  */}
+          <div className='text-gray-600 flex items-center justify-between gap-8 mt-2 text-sm '>
+            <div className='flex items-center gap-2'>
+              <div className='h-12 w-12 bg-gray-200 border-4 border-gray-100 rounded-full flex items-center justify-center text-xl'>
+                <CiMail />
+              </div>
+              <div className='flex-1'>
+                <p>Email</p>
+              </div>
+            </div>
+            <p className='break-all'>{order?.seller.email}</p>
+            {/* <p className='break-word'>{"These are words for me to use."}</p> */}
+          </div>
+
+          {/*  */}
+          <div className='text-gray-600 flex items-center justify-between gap-8 mt-2 text-sm'>
+            <div className='flex items-center gap-2'>
+              <div className='h-12 w-12 bg-gray-200 border-4 border-gray-100 rounded-full flex items-center justify-center text-xl'>
+                <IoPhonePortraitOutline />
+              </div>
+              <div className='flex-1'>
+                <p>Phone</p>
+              </div>
+            </div>
+            <p>{order?.seller.phonenumber}</p>
+          </div>
+        </div>
         
       </div>
 
@@ -300,7 +353,7 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
                 <div
                   className={clsx(
                     'h-12 w-12 rounded-full flex items-center justify-center text-xl border-4',
-                    order?.status.toLowerCase() === 'paid' || order?.status.toLowerCase() === 'processing' || order?.status.toLowerCase() === 'shipping' || order?.status.toLowerCase() === 'delivered'
+                    order?.status.toLowerCase() === 'paid' || order?.status.toLowerCase() === 'processing' || order?.deliveryStatus.toLowerCase() === 'delivered' || order?.deliveryStatus.toLowerCase() === 'picked-up'
                       ? 'border-[#f5f5ff] bg-[#eeeeff] text-primary'
                       : 'bg-gray-200 border-gray-100 text-neutral'
                   )}
@@ -310,15 +363,16 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
                 <div className='flex-1'>
                   <p className='text-gray-600'>Processing</p>
                   <p className='text-neutral text-xs font-light'>
-                    Seller has processed your order
+                    Seller has processed this order
                   </p>
                   <p className='text-neutral text-xs font-light'>
                     {moment(order?.createdAt).format('MMM Do YYYY, h:mm a')}
                   </p>
                 </div>
               </div>
+              
               {/* Order Shipped */}
-              <div className='flex items-center gap-2 my-8 z-10 relative'>
+              {/* <div className='flex items-center gap-2 my-8 z-10 relative'>
                 <div
                   className={clsx(
                     'h-12 w-12 rounded-full flex items-center justify-center text-xl bg-gray-200 border-4 border-gray-100 text-neutral',
@@ -341,13 +395,14 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
                     )}
                   </p>
                 </div>
-              </div>
+              </div> */}
+
               {/* Order Delivered/Picked */}
               <div className='flex items-center gap-2 my-8 z-10 relative'>
                 <div
                   className={clsx(
                     'h-12 w-12 rounded-full flex items-center justify-center text-xl bg-gray-200 border-4 border-gray-100 text-neutral',
-                    order?.status.toLowerCase() === 'delivered' &&
+                    order?.deliveryStatus.toLowerCase() === 'delivered' && order?.status.toLowerCase() === "completed" &&
                       'border-[#f5f5ff] bg-[#eeeeff] text-primary'
                   )}
                 >
@@ -370,9 +425,9 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
             </div>
 
             {
-              order?.status.toLowerCase() !== 'delivered' && order?.status.toLowerCase() !== 'cancelled' && order?.status.toLowerCase() !== 'refunded' && 
+              order?.deliveryStatus.toLowerCase() !== 'delivered' && order?.status.toLowerCase() !== 'cancelled' && order?.status.toLowerCase() !== 'completed' && order?.paymentStatus.toLowerCase() !== 'refunded' && 
               <div className='flex items-center gap-2 flex-wrap'>
-                <Button onClick={activateModal} className='text-white'>Mark Order as ${order?.deliveryOption === "pick-up" ? "Picked" : "Delivered"}</Button>
+                <Button onClick={activateModal} className='text-white'>Mark Order as {order?.deliveryOption === "pick-up" ? "Picked" : "Delivered"}</Button>
                 <Button variant='outlined' onClick={() => setCancelOrderModal(true)}>Cancel Order</Button>
               </div>
             }

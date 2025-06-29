@@ -157,6 +157,8 @@ export default function OrdersTable({
                   setTotalPages(data.meta.totalPages);
                   setLazyOrders(data.data); 
                   setLoading(false);
+
+                  console.log(data.data);
               }
           }).catch(error => {
               toast.error(error.message);
@@ -208,7 +210,7 @@ export default function OrdersTable({
 
     let styles = '';
 
-    switch (type === "payment" ? paymentStatus.toLowerCase() : deliveryStatus.toLowerCase) {
+    switch (type === "payment" ? paymentStatus?.toLowerCase() : deliveryStatus?.toLowerCase()) {
       case 'processing':
         styles = 'bg-orange-100 text-orange-600';
         break;
@@ -250,7 +252,7 @@ export default function OrdersTable({
     return (
       <div className='flex items-center gap-4'>
         <Image
-          src={firstProduct.productType === "pet" ? (firstProduct.product?.pet_images[0] ?? "") : (firstProduct.product?.accessoryImages[0] ?? "")}
+          src={firstProduct.productType === "pet" ? (firstProduct.product?.pet_images?.[0] ?? "") : (firstProduct.product?.accessoryImages?.[0] ?? "")}
           alt='image'
           width={20}
           height={20}

@@ -22,6 +22,7 @@ import HTTPService from "@/services/http";
 import Modal from "@/components/Global/Modal";
 import ENDPOINTS from "@/config/ENDPOINTS";
 import Button from "@/components/Global/Button";
+import IAccessory from "@/interfaces/accessory";
 
 interface IPetListingsTable {
     searchValue: string;
@@ -191,6 +192,27 @@ export default function AccessoriesListingsTable ({
         </div>
       );
     }
+
+    function sellerTemplate(listing: IAccessory) {
+      return (
+        <div className='flex items-center gap-4'>
+          {listing?.seller.profileImage && checkIfUrl(listing.seller.profileImage) ? (
+            <Image
+              src={listing.seller.profileImage}
+              alt="User image"
+              width={20}
+              height={20}
+              className='h-12 w-12 bg-[#1b1b1b] rounded-md'
+            />
+          ) : (
+            <div className='h-12 w-12 bg-[#1b1b1b] rounded-md'></div>
+          )}
+          <div className='flex-1 '>
+            <p className='text-sm font-medium'>{listing?.seller.username}</p>
+          </div>
+        </div>
+      );
+    }
   
     const getListingsByDate = useMemo(() => {
       if (selectedDate) {
@@ -250,6 +272,7 @@ export default function AccessoriesListingsTable ({
           rowClassName={rowClassTemplate}
         >
           <Column header='Accessory' body={listingTemplate} />
+          <Column field="Seller" header="Seller" body={sellerTemplate}/>
           {/* <Column selectionMode='multiple' headerStyle={{ width: '3rem' }} /> */}
           <Column field='category' header='Category' sortable />
           <Column field='quantity' header='Quantity' sortable />

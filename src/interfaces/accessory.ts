@@ -1,3 +1,5 @@
+import { IUser } from "./users";
+
 export default interface IAccessory {
     description: string
     quantity: string
@@ -12,4 +14,5 @@ export default interface IAccessory {
         lga: string
         address: string
     }
+    seller: IUser
 }
