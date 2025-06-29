@@ -94,7 +94,7 @@ export const paginatorTemplate = (totalRecords: number, page: number | undefined
                   </span>
               );
           },
-      }
+  }
 };
 
 export default function OrdersTable({

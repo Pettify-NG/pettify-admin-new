@@ -9,7 +9,7 @@ import { FaBone } from "react-icons/fa";
 import { FaShoppingCart } from "react-icons/fa";
 import { IoIosNotifications } from "react-icons/io";
 
-export const sellerLinks: ISidebarLink[] = [
+export const adminLinks: ISidebarLink[] = [
   { name: 'home', icon: <IoMdHome />, page: '/dashboard' },
   {
     name: 'pets',
@@ -27,14 +27,24 @@ export const sellerLinks: ISidebarLink[] = [
     page: '/dashboard/orders',
   },
   {
-    name: 'wallet',
-    icon: <FaWallet />,
-    page: '/dashboard/wallet',
+    name: 'users',
+    icon: <IoMdPerson />,
+    page: '/dashboard/users',
   },
   {
-    name: 'profile',
+    name: 'merchants',
     icon: <IoMdPerson />,
-    page: `/dashboard/profile`
+    page: `/dashboard/merchants`
+  },
+  {
+    name: 'customers',
+    icon: <IoMdPerson />,
+    page: `/dashboard/customers`
+  },
+  {
+    name: 'slider images',
+    icon: <IoMdPerson />,
+    page: `/dashboard/slider-images`
   },
   {
     name: "notifications",

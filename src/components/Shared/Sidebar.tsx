@@ -14,7 +14,7 @@ import { IoPersonCircleSharp } from "react-icons/io5";
 // Rest of your imports from custom components...
 import logoIcon from '../../../public/pettify-logo.png';
 import logo from '../../../public/pettify-logo.png';
-import { ISidebarLink, sellerLinks } from '@/static';
+import { ISidebarLink, adminLinks } from '@/static';
 import useLocalStorage from '@/hooks/useLocalStorage';
 
 type SidebarProps = {
@@ -41,18 +41,9 @@ export default function Sidebar({ isOpen, toggleSidebar, setSidebarOpen, notific
       path: '/',
     });
     router.push("/login");
-  }
+  };
 
-  const expand = (index: number) => {
-    if(isExpanded === index) {
-      setIsExpanded(null);
-      setSidebarOpen(true);
-    } else {
-      setIsExpanded(index);               
-    }                    
-  }
-
-  const links = sellerLinks;
+  const links = adminLinks;
 
   return (
     <>
@@ -182,36 +173,6 @@ export default function Sidebar({ isOpen, toggleSidebar, setSidebarOpen, notific
         </div>
 
         {/* User profile */}
-        <div className='border border-gray-800 p-4 rounded mb-4'>
-          <div className={`flex ${isOpen ? "justify-between" : "justify-center"} items-center`}>
-            {
-              adminDetails?.user?.profileImage ? 
-              <Image
-                src={adminDetails?.user?.profileImage ?? <IoPersonCircleSharp />}
-                width={10}
-                height={10}
-                quality={100}
-                alt='User profile image'
-                className={`duration-500 rounded-full border border-gray-400 w-10 h-10`}
-              />
-              : 
-              <IoPersonCircleSharp 
-                className={`duration-500 rounded-full border border-gray-400 w-10 h-10`}
-              />
-            }
-              {/* <Image
-                src={adminDetails?.user?.profileImage}
-                alt='User profile image'
-                className={`duration-500 rounded-full border border-gray-400 w-10 h-10`}
-              /> */}
-
-              <div className={`flex flex-col gap-2 ${isOpen ? '' : 'hidden'}`}>
-                  <p className='text-sm'>{(adminDetails?.user?.firstname || "") + " " + (adminDetails?.user?.lastname || "")}</p>
-                  <p className='text-[#F2C94C] text-sm'>{adminDetails?.user?.username}</p>
-              </div>
-          </div>
-        </div>
-
         {/* Sidebar content */}
         <div className="flex flex-col h-full gap-[10px] px-[18px]">
           {/* Your sidebar navigation links */}

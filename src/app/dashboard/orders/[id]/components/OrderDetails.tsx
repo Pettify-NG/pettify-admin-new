@@ -14,13 +14,9 @@ import { LuTruck } from 'react-icons/lu';
 import { PiCalendarCheck } from 'react-icons/pi';
 import { RiRefreshLine } from 'react-icons/ri';
 import { TbFileInvoice } from 'react-icons/tb';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import Cookies from 'universal-cookie';
 import { useRouter } from 'next/navigation';
-import { Calendar, CalendarProps } from 'primereact/calendar';
-import { FiCalendar } from 'react-icons/fi';
 
 import OrderDetailsTable from './OrderDetailsTable';
 import ENDPOINTS from '@/config/ENDPOINTS';
@@ -28,7 +24,6 @@ import HTTPService from '@/services/http';
 import DatePicker from '@/components/Shared/DatePicker';
 import Button from '@/components/Global/Button';
 import Modal from '@/components/Global/Modal';
-import TextInput from '@/components/Global/TextInput';
 import IOrder, { IProductItem } from '@/interfaces/orders';
 
 function StatusTemplate ({ status }: { status: string | undefined}) {
@@ -67,8 +62,6 @@ function StatusTemplate ({ status }: { status: string | undefined}) {
 
 export default function OrderDetails({ order }: { order: IOrder | null }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [orderShippedModal, setOrderShippedModal] = useState(false);
-
   const [cancelOrderModal, setCancelOrderModal] = useState(false);
 
   function openModal() {
@@ -86,134 +79,47 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
 
   const { replace, push } = useRouter();
 
-  const formik = useFormik({
-    initialValues: {
-      estimateDeliveryDate: "",
-      trackingService: "",
-      trackingNumber: "",
-      trackingLink: ""
-    },
-    validationSchema: Yup.object({
-      estimateDeliveryDate: Yup.string().required().label('Estimated Delivery Date'),
-      trackingService: Yup.string().required().label('Tracking Service'),
-      trackingNumber: Yup.string().required().label('Tracking Number'),
-      // trackingLink: Yup.string().required().label('Trackling Link'),
-      trackingLink: Yup.string().url("Invalid url").required().label('Tracking Link'),
-    }),
-    onSubmit: async (values) => {
-        try {
-          const data = {
-            status: "Shipping",
-            ...values
-          }
-            httpService
-              .patch(`${ENDPOINTS.ORDERS}/${order?._id}`, data, `Bearer ${token}`)
-              .then((apiRes) => {
-                console.log('Response: ', apiRes);
-
-                if (apiRes.status === 200) {
-                  formik.resetForm();
-
-                  toast.success('Order successfully updated to shipping.');
-
-                  setTimeout(() => {
-                    push('/admin/orders');
-                  }, 1000);
-                }
-              });
-        } catch (error) {
-          console.log(error);
-        }
-        
-      closeModal();
-      // toast.loading("Updating order...");
-      // setOrderShippedModal(false);
-    },
-    validateOnChange: true,
-  });
-
-  const deliveredFormik = useFormik({
-    initialValues: {
-      deliveryDate: "",
-    },
-    validationSchema: Yup.object({
-      deliveryDate: Yup.string().required().label('Estimated Delivery Date'),
-    }),
-    onSubmit: async (values) => {
-        try {
-          const data = {
-            status: "Delivered",
-            ...values
-          }
-            httpService
-              .patch(`${ENDPOINTS.ORDERS}/${order?._id}`, data, `Bearer ${token}`)
-              .then((apiRes) => {
-                console.log('Response: ', apiRes);
-
-                if (apiRes.status === 200) {
-                  formik.resetForm();
-
-                  toast.success('Order successfully updated to Delivered.');
-
-                  setTimeout(() => {
-                    push('/admin/orders');
-                  }, 1000);
-                }
-              });
-        } catch (error) {
-          console.log(error);
-        }
-      setOrderShippedModal(false);
-    },
-    validateOnChange: true,
-  });
-
   function hasDeliveryTimeExceeded(deliveryDate: string): boolean {
     const fortyEightHoursAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // 48 hours ago
     return new Date(deliveryDate) < fortyEightHoursAgo;
   }
 
   const updateOrder = (orderId?: string, orderStatus?: string,) => {
-    // if(orderId) {
-    
-        try {
-          toast.loading("Updating order...");
-          setOrderShippedModal(false);
-          closeModal();
-  
-          const data = {
-            status: orderStatus,
-            deliveryStatus: orderStatus
+    try {
+      toast.loading("Updating order...");
+
+      // setOrderShippedModal(false);
+      closeModal();
+
+      const data = {
+        deliveryStatus: orderStatus
+      }
+
+      httpService
+        .patch(`${ENDPOINTS.ORDERS}/${orderId}/complete`, data, `Bearer ${token}`)
+        .then((apiRes) => {
+          console.log('Response: ', apiRes);
+
+          toast.dismiss();
+          if (apiRes.status === 200) {
+            toast.success('Order successfully updated.');
+            setTimeout(() => {
+              push('/dashboard/orders');
+            }, 1000);
           }
-    
-          httpService
-            .patch(`${ENDPOINTS.ORDERS}/${orderId}`, data, `Bearer ${token}`)
-            .then((apiRes) => {
-              console.log('Response: ', apiRes);
-    
-              toast.dismiss();
-              if (apiRes.status === 200) {
-                formik.resetForm();
-    
-                toast.success('Order successfully updated.');
-                setTimeout(() => {
-                  push('/dashboard/orders');
-                }, 1000);
-              }
-            });
-        } catch (error) {
-          console.log(error);
-        }
-      
-    // } else {toast.error("Order not provided.")}
+        });
+    } catch (error: any) {
+      console.log(error);
+      toast.error(error);
+    }
   }
 
   const activateModal = () => {
-    if(order?.status.toLowerCase() === "shipping") {
-      setOrderShippedModal(true);
-    } else if (order?.status.toLowerCase() !== "shipping" && order?.status.toLowerCase() !== "delivered") {
+    if(order?.status.toLowerCase() === "cancelled" && order?.deliveryStatus.toLowerCase() === "cancelled") {
+      toast.error("This order has been cancelled.");
+    } else if (order?.deliveryStatus.toLowerCase() !== "picked-up" && order?.deliveryStatus.toLowerCase() !== "delivered") {
       openModal();
-    } else if (order.status.toLowerCase() === "delivered") {
+    } else if (order.deliveryStatus.toLowerCase() === "delivered" && order.deliveryStatus.toLowerCase() === "picked-up") {
       toast.error("This order has been delivered. You can no longer update this order.");
     }
   }
@@ -464,133 +370,28 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
               </div>
             </div>
 
-            {/* {
+            {
               order?.status.toLowerCase() !== 'delivered' && order?.status.toLowerCase() !== 'cancelled' && order?.status.toLowerCase() !== 'refunded' && 
               <div className='flex items-center gap-2 flex-wrap'>
-                <Button onClick={activateModal} className='text-white'>Update Status</Button>
+                <Button onClick={activateModal} className='text-white'>Mark Order as ${order?.deliveryOption === "pick-up" ? "Picked" : "Delivered"}</Button>
                 <Button variant='outlined' onClick={() => setCancelOrderModal(true)}>Cancel Order</Button>
               </div>
-            } */}
-
-            {/* Update Status Modal */}
-            <Modal
-              isOpen={modalOpen}
-              handleClose={closeModal}
-              title='Status Update'
-            >
-              <div className='grid grid-cols-1 sm:grid-cols-2 gap-x-4 items-center'>
-                <div className='mb-6'>
-                  <label
-                    htmlFor='trackingService'
-                    className='text-sm text-neutral mb-2 block'
-                  >
-                    Tracking service
-                  </label>
-                  <TextInput
-                    id='trackingService'
-                    onChange={formik.handleChange}
-                    value={formik.values.trackingService}
-                    error={formik.errors.trackingService}
-                  />
-                </div>
-                {/*  */}
-                <div className='mb-6'>
-                  <label
-                    htmlFor='trackingNumber'
-                    className='text-sm text-neutral mb-2 block'
-                  >
-                    Tracking Number
-                  </label>
-                  <TextInput
-                    id='trackingNumber'
-                    onChange={formik.handleChange}
-                    value={formik.values.trackingNumber}
-                    error={formik.errors.trackingNumber}
-                  />
-                </div>
-              </div>
-
-              <div className='mb-6'>
-                <label
-                  htmlFor='trackingLink'
-                  className='text-sm text-neutral mb-2 block'
-                >
-                  Shipping Tracking URL/Link
-                </label>
-                <TextInput
-                  id='trackingLink'
-                  onChange={formik.handleChange}
-                  value={formik.values.trackingLink}
-                  error={formik.errors.trackingLink}
-                />
-              </div>
-
-              <div className='mb-6'>
-                <label
-                  htmlFor='estimateDeliveryDate'
-                  className='text-sm text-neutral mb-2 block'
-                >
-                  Estimated Delivery Date
-                </label>
-                {/* <DatePicker handleSelectDate={handleSelectDate} /> */}
-                <Calendar
-                  id='estimateDeliveryDate'
-                  value={new Date(formik.values.estimateDeliveryDate)}
-                  onChange={formik.handleChange}
-                  // showTime
-                  hourFormat='24'
-                  placeholder='Select Date'
-                  className='pl-[16px] text-[12px] bg-white rounded-[8px] h-[40px] w-[170px]'
-                  icon={<FiCalendar className='text-black h-[20px] w-[20px]'/>}
-                  showButtonBar
-                  showIcon
-                  iconPos='left'
-                  hideOnDateTimeSelect={true}
-                  minDate={new Date()}
-                />
-              </div>
-
-              <div className='flex items-center gap-2'>
-                <Button onClick={formik.submitForm}>Update</Button>
-                <Button variant='outlined' onClick={closeModal}>
-                  Cancel
-                </Button>
-              </div>
-            </Modal>
+            }
 
             {/* Order delivered Modal */}
             <Modal
-              isOpen={orderShippedModal}
-              handleClose={() => setOrderShippedModal(false)}
+              isOpen={modalOpen}
+              handleClose={() => setModalOpen(false)}
               title='Status Update'
             > 
-              <h3 className='mb-4 text-lg text-black'> Has your order been delivered? </h3>
-              <div className='mb-6'>
-                <label
-                  htmlFor='deliveryDate'
-                  className='text-sm text-neutral mb-2 block'
-                >
-                  Delivery Date
-                </label>
-                <Calendar
-                  id='deliveryDate'
-                  value={new Date(deliveredFormik.values.deliveryDate)}
-                  onChange={deliveredFormik.handleChange}
-                  hourFormat='24'
-                  placeholder='Select Dates'
-                  className='pl-[16px] text-[12px] bg-white rounded-[8px] h-[40px] w-[170px]'
-                  icon={<FiCalendar className='text-black h-[20px] w-[20px]'/>}
-                  showButtonBar
-                  showIcon
-                  iconPos='left'
-                  hideOnDateTimeSelect={true}
-                  minDate={new Date()}
-                />
-              </div>
+              <h3 className='mb-4 text-lg text-black'> Has this order been delivered/picked? </h3>
               <div className='flex items-center gap-2'>
-                {/* <Button onClick={deliveredFormik.submitForm}>Update</Button> */}
-                <Button onClick={() => updateOrder(order?._id, "delivered")}>Yes</Button>
-                <Button variant='outlined' onClick={() => setOrderShippedModal(false)}>
+                <Button 
+                    onClick={() => updateOrder(order?._id, (order?.deliveryOption === "pick-up" ? "picked-up" : "delivered"))}
+                >
+                    Yes
+                </Button>
+                <Button variant='outlined' onClick={() => setModalOpen(false)}>
                   Cancel
                 </Button>
               </div>

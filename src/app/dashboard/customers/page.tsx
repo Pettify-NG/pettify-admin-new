@@ -1,18 +1,13 @@
-import React from "react";
+import Customers from '@/src/components/Admin/CustomersComponent/Customers'
+import React from 'react'
+import { dummyCustomer } from '@/src/interfaces/customers'
 
-import CustomersTable from "@/components/Shared/CustomersComponent/CustomersTable";
-import { ICustomers } from "@/interfaces/customers";
-
-export default function Customer () {
-    return (
-        <div>
-            <CustomersTable 
-                selectedDate={null}
-                searchValue=""
-                customers={undefined}
-                selectedCustomers={[] as ICustomers}
-                // handleChangeSelectedCustomers=() => {}
-            />
-        </div>
-    )
+export default async function CustomersDashboard () {
+  return (
+    <section>
+        <Customers customers={dummyCustomer}/>
+    </section>
+  )
 }
+
+// export default CustomersDashboard;

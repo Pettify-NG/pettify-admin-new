@@ -11,6 +11,11 @@ const ENDPOINTS = {
   // Upload Images
   UPLOAD_FILE: `upload`,
 
+  // Slider Images
+  SLIDER_IMAGES: `slider-images`,
+
+  DELIVERY_PRICES: `delivery-prices`,
+
   // Users
   USER: `users/`,
 
@@ -20,6 +25,7 @@ const ENDPOINTS = {
 
   // Orders
   ORDERS: `orders/`,
+  UPDATE_ORDER_DELIVERY_STATUS: `orders`,
 
   // Pet
   PET: `pets/`,
