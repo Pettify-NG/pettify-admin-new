@@ -61,7 +61,7 @@ export default function Login() {
         },
       ]);
 
-      if(res.data.user.role === "seller") {
+      if(res.data.user.role === "admin") {
         toast.success("Login successful.");
 
         storeCookies([
@@ -76,8 +76,8 @@ export default function Login() {
         push('/dashboard');
       } 
 
-      if (res.data.user.role === "buyer") {
-          toast.error("You are not allowed to login as a seller.");
+      if (res.data.user.role === "buyer" || res.data.user.role === "seller") {
+          toast.error("You are not allowed to use this.");
       }
     },
     validateOnChange: true,

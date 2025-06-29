@@ -52,8 +52,6 @@ export default function AccessoriesListingsTable ({
 
     const cookies = new Cookies(); 
     const token = cookies.get("pettify-token"); 
-
-    const [sellerInfo, setSellerInfo] = useLocalStorage<any>("pettify-details", {} as any);
   
     const [rowClick, setRowClick] = useState<boolean>(true);
     const [totalRecords, setTotalRecords] = useState<number>(0); 
@@ -75,7 +73,7 @@ export default function AccessoriesListingsTable ({
               const fetchData = () => { 
                   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL; 
            
-                  fetch(`${baseUrl}/api/v1/users/${sellerInfo.user._id}/accessories?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}&type=${timeFilter}`, { 
+                  fetch(`${baseUrl}/api/v1/accessories/admin?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}&type=${timeFilter}`, { 
                     headers: {
                       "Authorization": `Bearer ${token}`,
                     },
@@ -99,7 +97,7 @@ export default function AccessoriesListingsTable ({
               }; 
            
               fetchData(); 
-    }, [lazyState, timeFilter, sellerInfo, token]);
+    }, [lazyState, timeFilter, token]);
     
      useEffect(() => { 
         loadLazyData(); 

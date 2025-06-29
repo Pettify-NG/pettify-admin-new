@@ -21,7 +21,6 @@ import { useRouter } from 'next/navigation';
 import OrderDetailsTable from './OrderDetailsTable';
 import ENDPOINTS from '@/config/ENDPOINTS';
 import HTTPService from '@/services/http';
-import DatePicker from '@/components/Shared/DatePicker';
 import Button from '@/components/Global/Button';
 import Modal from '@/components/Global/Modal';
 import IOrder, { IProductItem } from '@/interfaces/orders';
@@ -77,12 +76,12 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
 
   const httpService = new HTTPService();
 
-  const { replace, push } = useRouter();
+  const { push } = useRouter();
 
-  function hasDeliveryTimeExceeded(deliveryDate: string): boolean {
-    const fortyEightHoursAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // 48 hours ago
-    return new Date(deliveryDate) < fortyEightHoursAgo;
-  }
+  // function hasDeliveryTimeExceeded(deliveryDate: string): boolean {
+  //   const fortyEightHoursAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // 48 hours ago
+  //   return new Date(deliveryDate) < fortyEightHoursAgo;
+  // }
 
   const updateOrder = (orderId?: string, orderStatus?: string,) => {
     try {
@@ -110,7 +109,7 @@ export default function OrderDetails({ order }: { order: IOrder | null }) {
         });
     } catch (error: any) {
       console.log(error);
-      toast.error(error);
+      toast.error(error.message);
     }
   }
 

@@ -49,7 +49,7 @@ export default function Register() {
     onSubmit: async (values) => {
       const data = {
         ...values,
-        role: "seller"
+        role: "admin"
       };
       
       const res = await httpService.post(ENDPOINTS.SIGN_UP, data);

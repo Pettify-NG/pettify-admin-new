@@ -130,7 +130,6 @@ export default function OrdersTable({
   });
 
   const [timeFilter, setTimeFilter] = useState<string>("All-time");
-  const [sellerInfo, setSellerInfo] = useLocalStorage<any>("pettify-details", {} as any);
 
   const loadLazyData = useCallback(() => {
       setLoading(true);
@@ -142,7 +141,7 @@ export default function OrdersTable({
 
           const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   
-          fetch(`${baseUrl}/api/v1/users/${sellerInfo.user._id}/${ENDPOINTS.ORDERS}?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}&type=${timeFilter}`, {
+          fetch(`${baseUrl}/api/v1/${ENDPOINTS.ORDERS}?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}&type=${timeFilter}`, {
               headers: {
                   Authorization: `Bearer ${token}`,
               },
@@ -167,7 +166,7 @@ export default function OrdersTable({
       };
   
       fetchData();
-  }, [lazyState, timeFilter, sellerInfo]);
+  }, [lazyState, timeFilter]);
 
   useEffect(() => {
     loadLazyData();

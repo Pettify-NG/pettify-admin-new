@@ -8,6 +8,7 @@ import { FaWallet } from "react-icons/fa6";
 import { FaBone } from "react-icons/fa";
 import { FaShoppingCart } from "react-icons/fa";
 import { IoIosNotifications } from "react-icons/io";
+import { FaRegImage } from "react-icons/fa6";
 
 export const adminLinks: ISidebarLink[] = [
   { name: 'home', icon: <IoMdHome />, page: '/dashboard' },
@@ -43,7 +44,7 @@ export const adminLinks: ISidebarLink[] = [
   },
   {
     name: 'slider images',
-    icon: <IoMdPerson />,
+    icon: <FaRegImage />,
     page: `/dashboard/slider-images`
   },
   {
@@ -51,7 +52,7 @@ export const adminLinks: ISidebarLink[] = [
     icon: <IoIosNotifications />,
     page: `/dashboard/notifications`
   },
-  { name: 'settings', icon: <IoMdSettings />, page: '/dashboard/settings' },
+  { name: 'delivery-prices', icon: <IoMdSettings />, page: '/dashboard/delivery-prices' },
   // { name: 'notification', icon: <LuMail />, page: '/admin/dashboard/notifications' },
 ];
 

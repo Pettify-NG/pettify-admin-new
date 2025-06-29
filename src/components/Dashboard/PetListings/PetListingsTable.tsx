@@ -67,8 +67,6 @@ export default function PetListingsTable ({
        page: 0, 
     }); 
 
-   const [sellerInfo, setSellerInfo] = useLocalStorage<any>("pettify-details", {} as any);
-
     const loadLazyData = useCallback(() => { 
         setLoading(true); 
     
@@ -76,7 +74,7 @@ export default function PetListingsTable ({
             const fetchData = () => { 
                 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL; 
          
-                fetch(`${baseUrl}/api/v1/users/${sellerInfo.user._id}/pets?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}`, { 
+                fetch(`${baseUrl}/api/v1/pets/admin?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}`, { 
                   headers: {
                     "Authorization": `Bearer ${token}`,
                   },
@@ -99,7 +97,7 @@ export default function PetListingsTable ({
             }; 
          
             fetchData(); 
-    }, [sellerInfo, lazyState, token]);
+    }, [lazyState, token]);
     
     useEffect(() => { 
         loadLazyData(); 
