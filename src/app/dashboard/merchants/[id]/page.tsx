@@ -2,12 +2,11 @@ import React from "react";
 import Link from "next/link";
 import { FaLongArrowAltLeft } from "react-icons/fa";
 
-import Button from "@/src/components/Global/Button";
-import Pagination from "@/src/components/Shared/Paginatioin";
-import { IUser } from "@/src/interfaces/users";
-import { DummyOrders } from "@/src/interfaces/orders";
-import MerchantDetails from "@/src/components/Admin/MerchantComponents/MerchantDetails";
-import getUserDetails from "@/src/libs/customers";
+import { getUserDetails } from "@/libs/products";
+import MerchantDetails from "@/components/Dashboard/MerchantComponents/MerchantDetails";
+import { IUsers, IUser } from "@/interfaces/users";
+import Pagination from "@/components/Shared/Paginatioin";
+import Button from "@/components/Global/Button";
 
 export default async function MerchantsDetailsPage ( { params } : { params: { id: string } } ) {
 
@@ -32,10 +31,10 @@ export default async function MerchantsDetailsPage ( { params } : { params: { id
                 </div>
             </div>
 
-            <MerchantDetails
+            {/* <MerchantDetails
                 customer={userDetails}
                 transactionHistory={DummyOrders}
-            />
+            /> */}
         </>
     );
 }

@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import { useState } from "react";
 import Image from "next/image";
@@ -7,15 +8,15 @@ import { Column } from "primereact/column";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import moment from "moment";
-
-import logo from "../../../../public/Pettify.png"
-import { IUser } from "@/src/interfaces/users";
-import { IOrder, OrderProductItem } from "@/src/interfaces/orders";
-import { FaEye } from "react-icons/fa";
-import { formatCurrency } from "@/src/helpers";
 import { CiMoneyBill } from "react-icons/ci";
 import { FiShoppingCart } from "react-icons/fi";
 import { TbLineScan } from "react-icons/tb";
+
+import logo from "../../../../public/Pettify.png"
+import { IUser } from "@/interfaces/users";
+import IOrder, { IProductItem } from "@/interfaces/orders";
+import { FaEye } from "react-icons/fa";
+import { formatCurrency } from "@/helpers";
 
 interface ICustomerDetails {
     customer: IUser | undefined
@@ -36,10 +37,10 @@ const MerchantDetails = ({ customer, transactionHistory }: ICustomerDetails) => 
     };
     
     function amountTemplate(order: IOrder) {
-      const { orderProduct } = order;
+      const { products } = order;
 
-      const totalAmount = orderProduct.reduce((a, b: OrderProductItem) => {
-          return a + b.amount;
+      const totalAmount = products.reduce((a: number, b: IProductItem) => {
+          return a + b.totalPrice;
       }, 0);
 
       return formatCurrency(totalAmount);
@@ -49,7 +50,7 @@ const MerchantDetails = ({ customer, transactionHistory }: ICustomerDetails) => 
         return (
             <div className='flex items-center gap-3'>
                 <Link
-                    href={`/admin/orders/${order.id}`}
+                    href={`/admin/orders/${order._id}`}
                     className='text-xl text-neutral'
                 >
                     <FaEye />
@@ -73,7 +74,7 @@ const MerchantDetails = ({ customer, transactionHistory }: ICustomerDetails) => 
             case 'delivered':
             styles = 'bg-green-100 text-green-600';
             break;
-            case 'cancelled' || 'refunded':
+            case 'cancelled':
             styles = 'bg-red-100 text-red-600';
             break;
             case 'packed':
@@ -103,16 +104,16 @@ const MerchantDetails = ({ customer, transactionHistory }: ICustomerDetails) => 
                     className='h-12 w-12 bg-[#1b1b1b] rounded-md'
                 />
 
-                <div className='div capitalize'>
+                {/* <div className='div capitalize'>
                     <p className='text-xs flex-1 font-medium'>
-                    {order.orderProduct[0].productName}
+                    {order.products[0].product.productName}
                     </p>
                     {order.orderProduct.length > 1 && (
                     <p className='text-xs text-neutral'>
                         +{order.orderProduct.length} pet(s)
                     </p>
                     )}
-                </div>
+                </div> */}
             </div>
         );
     }
@@ -120,9 +121,9 @@ const MerchantDetails = ({ customer, transactionHistory }: ICustomerDetails) => 
     function customerTemplate(order: IOrder) {
         return (
             <div className='flex flex-col gap-2 capitalize'>
-                <p className='text-sm flex-1 font-medium'>{order.customer.firstName + " " + order.customer.lastName}</p>
+                {/* <p className='text-sm flex-1 font-medium'>{order.customer.firstName + " " + order.customer.lastName}</p> */}
                 {/* <p className='text-xs text-neutral'>{order.receiverPhone}</p> */}
-                <p className='text-xs text-neutral'>{order.customer.email}</p>
+                {/* <p className='text-xs text-neutral'>{order.customer.email}</p> */}
             </div>
         );
     }
@@ -130,9 +131,9 @@ const MerchantDetails = ({ customer, transactionHistory }: ICustomerDetails) => 
     function merchantTemplate(order: IOrder) {
         return (
             <div className='flex flex-col gap-2 capitalize'>
-                <p className='text-sm flex-1 font-medium'>{order.merchant.firstName + " " + order.merchant.lastName}</p>
+                {/* <p className='text-sm flex-1 font-medium'>{order.merchant.firstName + " " + order.merchant.lastName}</p> */}
                 {/* <p className='text-xs text-neutral'>{order.receiverPhone}</p> */}
-                <p className='text-xs text-neutral'>{order.merchant.email}</p>
+                {/* <p className='text-xs text-neutral'>{order.merchant.email}</p> */}
             </div>
         );
     }
@@ -219,7 +220,7 @@ const MerchantDetails = ({ customer, transactionHistory }: ICustomerDetails) => 
                 <div className='flex items-center gap-4'>
                   <p className='text-gray-700 text-3xl font-medium'>
                     {/* {(990).toLocaleString()} */}
-                    {customer?.totalListings ?? 0}
+                    {/* {customer?.totalListings ?? 0} */}
                   </p>
                 </div>
               </div>
