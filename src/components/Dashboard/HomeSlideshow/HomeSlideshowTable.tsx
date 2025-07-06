@@ -23,10 +23,6 @@ export default function HomeSlideshowTable({
   selectedDate: number | null;
   slideshows: SliderImageType[] | null | ISlideShows[];
 }) {
-  const [selectedImages, setSelectedImages] = useState<
-    SliderImageType[] | null
-  >(null);
-  const [rowClick, setRowClick] = useState<boolean>(true);
 
   const cookies = new Cookies();
   const httpService = new HTTPService();
@@ -49,9 +45,9 @@ export default function HomeSlideshowTable({
       );
 
       toast.dismiss();
-      if (res.status === 200) {
-        console.log(res);
-        toast.success('Slider image successfully deleted');
+      if (res.success) {
+        // console.log(res);
+        toast.success('Slider image deleted');
 
         router.refresh();
       } else toast.error('Cannot delete slider image at this time');
@@ -85,12 +81,6 @@ export default function HomeSlideshowTable({
       </div>
     );
   }
-
-  const selectChangeHandler = (e: any) => {
-    setSelectedImages(e.value);
-
-    console.log(e.value);
-  };
 
   return (
     <div className='rounded-xl p-4 bg-white border border-gray-200'>
