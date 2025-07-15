@@ -221,7 +221,7 @@ const MerchantDetails = ({ customer, transactionHistory }: ICustomerDetails) => 
                 <div className='flex items-center gap-4'>
                   <p className='text-gray-700 text-3xl font-medium'>
                     {/* {(990).toLocaleString()} */}
-                    {customer.listings.length ?? 0}
+                    {/* {customer.listings.length ?? 0} */}
                   </p>
                 </div>
               </div>
