@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Column } from 'primereact/column';
 import { DataTable, DataTableFilterMeta, DataTablePageEvent } from 'primereact/datatable';
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { FaEye } from 'react-icons/fa';
 import { MdOutlineDelete } from 'react-icons/md';
@@ -17,9 +17,13 @@ import toast from 'react-hot-toast';
 import Cookies from 'universal-cookie';
 
 import ENDPOINTS from '@/config/ENDPOINTS';
+import HTTPService from '@/services/http';
 import { formatCurrency, formatDate } from '@/helpers';
 import { IUser, IUsers } from '@/interfaces/users';
 import { paginatorTemplate } from '@/components/Shared/PaginatorTemplate';
+import { useDebounce } from '@/hooks/useDebounce';
+import { CiSearch } from 'react-icons/ci';
+import TextInput from '@/components/Global/TextInput';
 
 interface LazyTableState {
   first: number;
@@ -32,27 +36,21 @@ interface LazyTableState {
 }
 
 export default function UsersTable({
-  selectedDate,
-  users,
-  searchValue,
   selectedUsers,
   handleChangeSelectedUsers,
+  userType,
 }: {
-  selectedDate: Date | (Date | null)[] | Date[] | null | undefined | number;
-  searchValue: string;
-  users: IUsers | undefined;
+  userType: "customers" | "merchants" | "users"
   selectedUsers: IUsers;
   handleChangeSelectedUsers?: (e: any) => void;
 }) {
-  // const [selectedCustomers, setSelectedCustomers] = useState<
-  //   ICustomer[] | null
-  // >(null);
-  const [rowClick, setRowClick] = useState<boolean>(true);
+  const httpService = new HTTPService();
 
   const cookies = new Cookies();
   const token = cookies.get('pettify-token');
-  console.log(token);
 
+  const [globalFilter, setGlobalFilter] = useState<string>('');
+  
   const [totalRecords, setTotalRecords] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [lazyUsers, setLazyUsers] = useState<IUsers | null | undefined>(null);
@@ -60,89 +58,90 @@ export default function UsersTable({
   const [lazyState, setlazyState] = useState<LazyTableState>({
     first: 0,
     rows: 10,
-    page: 1,
+    page: 0,
   });
 
-  let networkTimeout: string | number | NodeJS.Timeout | null | undefined = null;
+  const type = userType === "customers" ? "customers" : userType === "merchants" ? "merchants" : "users";
+  const debouncedGlobalFilter = useDebounce(globalFilter, 300);
 
-  useEffect(() => {
-      loadLazyData();
-  }, [lazyState]);
-
-  const loadLazyData = () => {
+  const loadLazyData = useCallback(() => {
       setLoading(true);
 
-      if (networkTimeout) {
-          clearTimeout(networkTimeout);
-      }
+      const fetchData = async () => {
+        try {
+          const cookies = new Cookies();
+          const token = cookies.get('pettify-token');
 
-      //imitate delay of a backend call
-      networkTimeout = setTimeout(() => {
-          const fetchData = () => {
-              
-              // const baseUrl = process.env.API_BASE_URL;
-              const baseUrl = "https://pettify-backend.onrender.com/api/v1"
-      
-              fetch(`${baseUrl}/${ENDPOINTS.ALL_USERS}?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}`, {
-                  headers: {
-                      Authorization: `Bearer ${token}`,
-                  },
-                  cache: 'no-store',
-              }).then(response => {
-                  if (!response.ok) {
-                      throw new Error('Network response was not ok');
-                  }
-                  return response.json();
-              }).then(data => {
-                  console.log(data);
-                  if (data.data) {
-                      console.log(data.meta);
-                      setTotalRecords(data.meta.totalUsers);
-                      setTotalPages(data.meta.totalPages);
-                      console.log(data.data);
-                      setLazyUsers(data.data.length === 0 ? lazyUsers : data.data);
-                      setLoading(false);
-                  }
-              }).catch(error => {
-                  toast.error(error.message);
-                  console.error('There was a problem with the fetch operation:', error);
-              });
-          };
-      
-          fetchData();
-      }, Math.random() * 1000 + 250);
-  };
+          const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+          const params = new URLSearchParams({
+            page: ((lazyState.page ?? 0) + 1).toString(),
+            limit: (lazyState.rows).toString(),
+            ...(debouncedGlobalFilter && { name: debouncedGlobalFilter }),
+          });
+
+          // const endpoint = 
+
+          const response = await fetch(`${baseUrl}/api/v1/${userType === "customers" ? ENDPOINTS.CUSTOMERS : userType === "merchants" ? ENDPOINTS.MERCHANTS : ENDPOINTS.ALL_USERS}?${params}`, {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+              },
+              cache: 'no-store',
+          })
+
+          if (!response.ok) {
+            throw new Error('An error occured.');
+          }
+          
+          const data = await response.json();
+
+          if (data.data) {
+              setTotalRecords(data.meta.totalRecords);
+              setTotalPages(data.meta.totalPages);
+              setLazyUsers(data.data); 
+          }
+        
+        } catch(error: any) {
+          toast.error(error.message);
+
+          console.error('There was a problem with the fetch operation:', error);
+        } finally {
+          setLoading(false);
+        };
+      };
+  
+      fetchData();
+  }, [lazyState, userType, debouncedGlobalFilter]);
+
+  useEffect(() => {
+    loadLazyData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedGlobalFilter]);
 
   const onPage = (event: DataTablePageEvent) => {
-      setlazyState(event);
-      console.log(event);
+    setlazyState(event);
   };
 
-//   const deleteCustomer = (customerId?: number) => {
-//     if(customerId) {
-//       try {
-//         toast.loading("Deleting customer...");
-
-//         const data = {
-//           status: "SUSPENDED"
-//         }
+  const deleteCustomer = (customerId?: string) => {
+    if(customerId) {
+      try {
+        toast.loading("Deleting user...");
   
-//         httpService
-//           .deleteLikePatch(`${ENDPOINTS.CUSTOMERS}/${customerId}`, data, `Bearer ${token}`)
-//           .then((apiRes) => {
-//             console.log('Response: ', apiRes);
-  
-//             toast.dismiss();
-//             if (apiRes.status === 200) {
-  
-//               toast.success('Customer successfully deleted.');
-//             }
-//           });
-//       } catch (error) {
-//         console.log(error);
-//       }
-//     } else {toast.error("Could not delete customer.")}
-//   }
+        httpService
+          .deleteById(`${ENDPOINTS.CUSTOMERS}/${customerId}`, `Bearer ${token}`)
+          .then((apiRes) => {  
+            toast.dismiss();
+            if (apiRes.success) {
+              toast.success('User deleted.');
+            }
+          });
+      } catch (error: any) {
+        console.log(error);
+        toast.dismiss();
+        toast.error(error.message);
+      }
+    } else {toast.error("Could not delete user.")}
+  }
 
   const dateTemplate = (customer: IUser) =>
     moment(customer.createdAt).format('MMM Do YYYY');
@@ -152,10 +151,11 @@ export default function UsersTable({
 //   }
 
   function actionTemplate(customer: IUser) {
+   
     return (
       <div className='flex items-center gap-3'>
         <Link
-          href={`/admin/customers/${customer.id}?edit=false`}
+          href={`/dashboard/${type}/${customer._id}?edit=false`}
           className='text-xl text-neutral'
         >
           <FaEye />
@@ -169,7 +169,7 @@ export default function UsersTable({
           <MdOutlineModeEdit />
         </Link>*/}
         <button
-        //   onClick={() => deleteCustomer(customer?.id)}
+          onClick={() => deleteCustomer(customer?._id)}
         >
           <RiDeleteBin6Line className='text-xl'/>
         </button>
@@ -228,97 +228,109 @@ export default function UsersTable({
 //     );
 //   }
 
-  const matchedUsers = useMemo(() => {
-    if (searchValue.trim().length === 0) return lazyUsers;
-
-    return lazyUsers?.filter(
-      (user) =>
-        user.firstname.toLowerCase().includes(searchValue) ||
-        user.lastname.toLowerCase().includes(searchValue) ||
-        user.email.toLowerCase().includes(searchValue)
-    );
-  }, [searchValue, lazyUsers]);
-
   const router = useRouter();
-  console.log(users);
 
   return (
-    <div className='card rounded-md p-4 bg-white border border-gray-200'>
-      <div className='px-4 flex flex-col w-full justify-between lg:flex-row lg:items-center gap-8 mb-8'>
-        <p className='font-bold text-xl text-gray-700'>Customers Table</p>
+    <>
+      <div className='justify-between flex items-center gap-3 mb-2 w-full'>
+        <div className='w-full max-w-md'>
+          <TextInput
+            placeholder='Search users...'
+            leftIcon={<CiSearch />}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            value={globalFilter}
+          />
+        </div>
       </div>
-      <DataTable
-        value={matchedUsers ?? []}
-        lazy
-        first={lazyState.first} 
-        onPage={onPage}
-        loading={loading}
-        totalRecords={totalRecords}
-        paginator
-        paginatorTemplate={paginatorTemplate(totalRecords, lazyState.page)}
-        showSelectAll
-        selectionAutoFocus={true}
-        paginatorClassName='flex justify-between'
-        selection={selectedUsers}
-        selectionMode={rowClick ? null : 'multiple'}
-        onSelectionChange={handleChangeSelectedUsers}
-        dataKey='_id'
-        tableStyle={{ minWidth: '20rem' }}
-        rows={10}
-        // rowsPerPageOptions={[20, 50, 100, 250]}
-        className='rounded-md'
-        // sortOrder={-1}
-        sortField='createdAt'
-        onRowClick={(e) => router.push(`/admin/users/${e.data._id}`)}
-      >
-        <Column
-          selectionMode='multiple'
-          headerStyle={{ width: '3rem' }}
-          className=''
-          headerClassName='text-sm'
-        ></Column>
-        <Column
-          field='customer.item'
-          header='Customer'
-          sortable
-          body={customerTemplate}
-          headerClassName='text-sm'
-        ></Column>
-        <Column field='email' header='Email Address' sortable headerClassName='text-sm'></Column>
-        <Column field='phonenumber' header='Phone' sortable headerClassName='text-sm'></Column>
-        <Column field='totalPurchases' header='Purchases' sortable headerClassName='text-sm'></Column>
-        <Column field='deliveryAddress' header='Delivery Address' sortable headerClassName='text-sm'></Column>
-        {/* <Column field='orders' header='Orders' sortable></Column> */}
-        {/* <Column
-          field='orderCount'
-          header='Order Count'
-          body={amountTemplate}
-          sortable
-          headerClassName='text-sm'
-        ></Column> */}
-        {/* <Column
-          field='orderBalance'
-          header='Order Balance'
-          body={amountTemplate}
-          sortable
-          headerClassName='text-sm'
-        ></Column> */}
-        {/* <Column
-          field='status'
-          header='Status'
-          sortable
-          body={statusTemplate}
-          headerClassName='text-sm'
-        ></Column> */}
-        <Column
-          field='created'
-          header='Created'
-          body={dateTemplate}
-          sortable
-          headerClassName='text-sm'
-        ></Column>
-        <Column field='action' header='Action' body={actionTemplate} headerClassName='text-sm'></Column>
-      </DataTable>
-    </div>
+    
+      <div className='card rounded-md p-4 bg-white border border-gray-200'>
+        <DataTable
+          value={lazyUsers ?? []}
+          lazy
+          first={lazyState.first} 
+          onPage={onPage}
+          loading={loading}
+          totalRecords={totalRecords}
+          paginator
+          paginatorTemplate={paginatorTemplate(totalRecords, lazyState.page)}
+          // showSelectAll
+          selectionAutoFocus={true}
+          paginatorClassName='flex justify-between'
+          // selection={selectedUsers}
+          // selectionMode={rowClick ? null : 'multiple'}
+          // onSelectionChange={handleChangeSelectedUsers}
+          dataKey='_id'
+          tableStyle={{ minWidth: '20rem' }}
+          rows={10}
+          // rowsPerPageOptions={[20, 50, 100, 250]}
+          className='rounded-md'
+          // sortOrder={-1}
+          sortField='createdAt'
+          onRowClick={(e) => router.push(`/dashboard/${type}/${e.data._id}`)}
+        >
+          {/* <Column
+            selectionMode='multiple'
+            headerStyle={{ width: '3rem' }}
+            className=''
+            headerClassName='text-sm'
+          ></Column> */}
+          <Column
+            field='customer.item'
+            header='User'
+            sortable
+            body={customerTemplate}
+            headerClassName='text-sm'
+          ></Column>
+          <Column field='email' header='Email Address' sortable headerClassName='text-sm'></Column>
+          <Column field='phonenumber' header='Phone' sortable headerClassName='text-sm'></Column>
+          {
+            userType !== "merchants" ?
+              <Column field='totalPurchases' header='Purchases' sortable headerClassName='text-sm'></Column>
+            : null
+          }
+          {
+            userType === "merchants" ?
+              <Column field='totalPets' header='Pets' sortable headerClassName='text-sm'></Column> 
+            : null
+          }
+          {
+            userType === "merchants" ?
+              <Column field='totalAccessories' header='Accessories' sortable headerClassName='text-sm'></Column> 
+            : null
+          }
+          <Column field='deliveryAddress' header='Delivery Address' sortable headerClassName='text-sm'></Column>
+          {/* <Column field='orders' header='Orders' sortable></Column> */}
+          {/* <Column
+            field='orderCount'
+            header='Order Count'
+            body={amountTemplate}
+            sortable
+            headerClassName='text-sm'
+          ></Column> */}
+          {/* <Column
+            field='orderBalance'
+            header='Order Balance'
+            body={amountTemplate}
+            sortable
+            headerClassName='text-sm'
+          ></Column> */}
+          {/* <Column
+            field='status'
+            header='Status'
+            sortable
+            body={statusTemplate}
+            headerClassName='text-sm'
+          ></Column> */}
+          <Column
+            field='created'
+            header='Created'
+            body={dateTemplate}
+            sortable
+            headerClassName='text-sm'
+          ></Column>
+          <Column field='action' header='Action' body={actionTemplate} headerClassName='text-sm'></Column>
+        </DataTable>
+      </div>
+    </>
   );
 }

@@ -17,9 +17,10 @@ const ENDPOINTS = {
   DELIVERY_PRICES: `delivery-prices`,
 
   // Users
-  USER: `users/`,
-  ALL_USERS: `users`,
-  MERCHANTS: `merchants/`,
+  USERS: `users/users`, /** those who have never made a purchase **/ 
+  ALL_USERS: `users`,  /** all users - if they've made a purchase or not **/
+  MERCHANTS: `users/merchants`, /** all sellers **/
+  CUSTOMERS: `users/customers`, /** all users who have made a purchase **/
 
   // Accessory
   ACCESSORY: `accessories/`,

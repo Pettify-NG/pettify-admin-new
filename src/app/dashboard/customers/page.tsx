@@ -1,16 +1,11 @@
 import React from 'react';
 
-// import Customers from '@/src/components/Admin/CustomersComponent/Customers'
-// import Customers
+import Customers from '@/components/Dashboard/CustomersComponent/Customers';
 
-
-export default async function CustomersDashboard () {
+export default function CustomersDashboard () {
   return (
     <section>
-        {/* <Customers customers={dummyCustomer}/> */}
-        customers
+        <Customers /> 
     </section>
   )
-}
-
-// export default CustomersDashboard;
+};

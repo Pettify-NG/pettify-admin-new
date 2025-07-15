@@ -2,7 +2,7 @@ import React from 'react'
 
 import Users from '@/components/Dashboard/UsersComponents/Users'
 
-export default async function UsersDashboard () {
+export default function UsersDashboard () {
   return (
     <div>
         <Users />

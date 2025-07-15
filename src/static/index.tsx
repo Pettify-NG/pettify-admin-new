@@ -32,16 +32,16 @@ export const adminLinks: ISidebarLink[] = [
     icon: <IoMdPerson />,
     page: '/dashboard/users',
   },
-  // {
-  //   name: 'merchants',
-  //   icon: <IoMdPerson />,
-  //   page: `/dashboard/merchants`
-  // },
-  // {
-  //   name: 'customers',
-  //   icon: <IoMdPerson />,
-  //   page: `/dashboard/customers`
-  // },
+  {
+    name: 'merchants',
+    icon: <IoMdPerson />,
+    page: `/dashboard/merchants`
+  },
+  {
+    name: 'customers',
+    icon: <IoMdPerson />,
+    page: `/dashboard/customers`
+  },
   {
     name: 'slider images',
     icon: <FaRegImage />,

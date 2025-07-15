@@ -3,10 +3,10 @@
 import React, { useState, } from 'react';
 
 import Pagination from '../../Shared/Paginatioin';
-import UsersTable from './UsersTable';
+import UsersTable from '../UsersComponents/UsersTable';
 import { IUser, IUsers } from '@/interfaces/users';
 
-export default function Users() {
+export default function Customers() {
   // const [selectedDate, setSelectedDate] = useState<
   //   Date | (Date | null)[] | Date[] | null | number | undefined
   // >(null);
@@ -31,7 +31,7 @@ export default function Users() {
       <section>
         {/* Users Table */}
         <UsersTable 
-          userType="users"
+          userType="customers"
           selectedUsers={selectedUsers}
           handleChangeSelectedUsers={handleChangeSelectedUser}
         />

@@ -3,8 +3,8 @@
 import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Column, ColumnBodyOptions } from 'primereact/column';
-import { DataTable, DataTableFilterMeta, DataTablePageEvent } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { DataTable, DataTablePageEvent } from 'primereact/datatable';
 import React, { useState, useMemo, useEffect, useCallback, ChangeEvent } from 'react';
 import { FaEye } from 'react-icons/fa';
 import { IoIosArrowDown } from 'react-icons/io';
@@ -25,8 +25,23 @@ from 'primereact/paginator';
 import { formatCurrency } from '@/helpers';
 import IOrder from '@/interfaces/orders';
 import ENDPOINTS from '@/config/ENDPOINTS';
-import HTTPService from '@/services/http';
-import useLocalStorage from '@/hooks/useLocalStorage';
+import { useDebounce } from '@/hooks/useDebounce';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
+import { Dropdown } from 'primereact/dropdown';
+import { Calendar } from 'primereact/calendar';
+import { InputNumber } from 'primereact/inputnumber';
+import TextInput from '@/components/Global/TextInput';
+import { CiSearch } from 'react-icons/ci';
+
+export interface IDataFilters {
+  status?: string;
+  amountFrom?: number;
+  amountTo?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}
 
 interface LazyTableState {
     first: number;
@@ -35,7 +50,7 @@ interface LazyTableState {
     pageCount?: number;
     sortField?: string;
     sortOrder?: number;
-    filters?: DataTableFilterMeta;
+    filters?: IDataFilters;
 }
 
 export const paginatorTemplate = (totalRecords: number, page: number | undefined) => {
@@ -100,23 +115,13 @@ export const paginatorTemplate = (totalRecords: number, page: number | undefined
 export default function OrdersTable({
   page = 'orders',
 }: {
-  searchValue?: string;
-  selectedDate?: number | null;
   page?: 'orders' | 'return-request' | 'cancelled orders' | 'recent orders';
   handleChangeSelectedOrders?: (e: any) => void;
   selectedOrders?: IOrder[];
-  categoryNavigation?: any;
-  setCurrentPage?: any;
-  cancelledOrdersCount?: number;
 }) {
   const [selectedOrders, setSelectedOrders] = useState<IOrder[]>([]);
-  const [searchValue, setSearchValue] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<number | null>(null);
 
-  const [categoryNavigation, setCategoryNavigation] = useState<any>();
   const [defaultFilterOption, setDefaultFilterOption] = useState(0);
-
-  const [cardOpen, setCardOpen] = useState<boolean>(false);
 
   const [rowClick, setRowClick] = useState<boolean>(true);
   const [totalRecords, setTotalRecords] = useState<number>(0);
@@ -127,52 +132,115 @@ export default function OrdersTable({
     first: 0,
     rows: 10,
     page: 0,
+    filters: {}
   });
+
+  const [globalFilter, setGlobalFilter] = useState<string>('');
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
+  const [tempFilters, setTempFilters] = useState<IDataFilters>({});
+  
+  const debouncedGlobalFilter = useDebounce(globalFilter, 300);
 
   const [timeFilter, setTimeFilter] = useState<string>("All-time");
 
   const loadLazyData = useCallback(() => {
       setLoading(true);
 
-      const fetchData = () => {
+      const fetchData = async () => {
+        try {
           const cookies = new Cookies();
           const token = cookies.get('pettify-token');
-          console.log(token);
+          // console.log(token);
 
           const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-  
-          fetch(`${baseUrl}/api/v1/${ENDPOINTS.ORDERS}?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}&type=${timeFilter}`, {
+
+          const params = new URLSearchParams({
+            page: ((lazyState.page ?? 0) + 1).toString(),
+            limit: (lazyState.rows).toString(),
+            type: timeFilter,
+            ...(debouncedGlobalFilter && { search: debouncedGlobalFilter }),
+            ...(lazyState?.filters?.status && { status: lazyState.filters.status }),
+            // ...(lazyState?.filters?.position && { position: lazyState.filters.position }),
+            ...(lazyState?.filters?.amountFrom && { amountFrom: lazyState.filters.amountFrom.toString() }),
+            ...(lazyState?.filters?.amountTo && { amountTo: lazyState.filters.amountTo.toString() }),
+            ...(lazyState?.filters?.dateFrom && { dateFrom: lazyState.filters.dateFrom }),
+            ...(lazyState?.filters?.dateTo && { dateTo: lazyState.filters.dateTo }),
+          });
+
+          const response = await fetch(`${baseUrl}/api/v1/${ENDPOINTS.ORDERS}?${params}`, {
               headers: {
                   Authorization: `Bearer ${token}`,
               },
               cache: 'no-store',
-          }).then(response => {
-              if (!response.ok) {
-                  throw new Error('An error occured.');
-              }
-              return response.json();
-          }).then(data => {
-              if (data.data) {
-                  setTotalRecords(data.meta.totalRecords);
-                  setTotalPages(data.meta.totalPages);
-                  setLazyOrders(data.data); 
-                  setLoading(false);
+          })
 
-                  console.log(data.data);
-              }
-          }).catch(error => {
-              toast.error(error.message);
+          if (!response.ok) {
+            throw new Error('An error occured.');
+          }
+          
+          const data = await response.json();
 
-              // console.error('There was a problem with the fetch operation:', error);
-          });
+          if (data.data) {
+              setTotalRecords(data.meta.totalRecords);
+              setTotalPages(data.meta.totalPages);
+              setLazyOrders(data.data); 
+
+              console.log(data.data);
+          }
+        
+        } catch(error: any) {
+          toast.error(error.message);
+
+          console.error('There was a problem with the fetch operation:', error);
+        } finally {
+          setLoading(false);
+        };
       };
   
       fetchData();
-  }, [lazyState, timeFilter]);
+  }, [lazyState, timeFilter, debouncedGlobalFilter]);
+
+  const handleApplyFilters = () => {
+    const newLazyState: LazyTableState = {
+      ...lazyState,
+      first: 0,
+      page: 0,
+      filters: tempFilters,
+    };
+
+    setlazyState(newLazyState);
+    setShowFilterDialog(false);
+    loadLazyData();
+  }
+
+  // Clear filters
+  const handleClearFilters = () => {
+    const clearedFilters: IDataFilters = {};
+    setTempFilters(clearedFilters);
+    const newLazyState: LazyTableState = {
+      ...lazyState,
+      first: 0,
+      page: 0,
+      filters: clearedFilters,
+    };
+
+    setlazyState(newLazyState);
+    setShowFilterDialog(false);
+    loadLazyData();
+  };
+
+  // Open filter dialog
+  const openFilterDialog = () => {
+    setTempFilters({ ...lazyState.filters });
+    setShowFilterDialog(true);
+  };
 
   useEffect(() => {
     loadLazyData();
-  }, [loadLazyData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedGlobalFilter]);
+
+  // loadLazyData, debouncedGlobalFilter, lazyState.filters
 
   const onPage = (event: DataTablePageEvent) => {
     setlazyState(event);
@@ -273,39 +341,6 @@ export default function OrdersTable({
     );
   }
 
-  const getOrdersByDate = useMemo(() => {
-    if (selectedDate) {
-      return lazyOrders?.filter(
-        (order) => moment(order.createdAt).valueOf() >= selectedDate
-      );
-    }
-
-    if(categoryNavigation) {
-      return lazyOrders?.filter((item) => {
-        const itemDate = new Date(item.createdAt);
-        return itemDate >= categoryNavigation.startDate && itemDate <= categoryNavigation.endDate;
-      });
-    } else return lazyOrders;
-
-  }, [lazyOrders, selectedDate, categoryNavigation]);
-
-  const matchedOrders = useMemo(() => {
-    if (searchValue?.trim().length === 0) return getOrdersByDate;
-
-    return getOrdersByDate?.filter(
-      (order) =>
-        order.uuid.toLowerCase().includes(searchValue)
-        // order.shippingId.toLowerCase().includes(searchValue) ||
-        // order.orderProduct[0].productName.toLowerCase().includes(searchValue)
-    );
-  }, [searchValue, getOrdersByDate]);
-
-  const checkBoxTemplate = (data: IOrder, options: ColumnBodyOptions) => {
-    options.props = "border-red-500";
-    return options.column.render();
-    // options.column.props.style = "border-red-500"
-  }
-
   const router = useRouter();
 
   const rowClassTemplate = (data: IOrder) => {
@@ -315,11 +350,8 @@ export default function OrdersTable({
   };
 
   const idTemplate = (data: IOrder) => {
-    return `ORDER-${data.uuid}`
+    return `#${data.uuid}`
   }
-
-  const httpService = new HTTPService();
-  const cookies = new Cookies();
 
   const handleChangeSelectedOrders = (e: any) => {
     console.log(e.value);
@@ -327,23 +359,10 @@ export default function OrdersTable({
     setSelectedOrders(e.value);
   };
 
-  function hasDeliveryTimeExceeded(deliveryDate: string): boolean {
-    const fortyEightHoursAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // 48 hours ago
-    return new Date(deliveryDate) < fortyEightHoursAgo;
-  }
-
-  const debouncedSearch = useMemo(() => {
-    let timer: NodeJS.Timeout;
-
-    const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        setSearchValue(e.target.value);
-      }, 500);
-    };
-
-    return handleSearchChange;
-  }, []);
+  // function hasDeliveryTimeExceeded(deliveryDate: string): boolean {
+  //   const fortyEightHoursAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000); // 48 hours ago
+  //   return new Date(deliveryDate) < fortyEightHoursAgo;
+  // }
 
   const handleCategoryChange = (newIndex: number, option: any) => {            
     switch (option) {
@@ -369,19 +388,111 @@ export default function OrdersTable({
     console.log(option);
   }
 
+  // Status options for dropdown
+  // 'pending', 'paid', 'failed', 'cancelled', 'completed'
+  const statusOptions = [
+    { label: 'All', value: null },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Failed', value: 'failed' },
+    { label: 'Paid', value: 'paid'},
+    { label: 'Cancelled', value: 'cancelled'}
+  ];
+
+  // Filter dialog content
+  const renderFilterDialog = () => {
+    return (
+      <Dialog
+        visible={showFilterDialog}
+        onHide={() => setShowFilterDialog(false)}
+        header="Filter Options"
+        className="w-1/2 md:w-20rem"
+        modal
+      >
+        <div className="grid formgrid p-fluid">
+          {/* First row of filters */}
+          <div className="field col-12 md:col-4">
+            <label htmlFor="status">Status</label>
+            <Dropdown
+              id="status"
+              value={tempFilters.status || null}
+              options={statusOptions}
+              onChange={(e) => setTempFilters({ ...tempFilters, status: e.value })}
+              placeholder="Select Status"
+            />
+          </div>
+
+          {/* Amount range */}
+          <div className="field col-12 md:col-6">
+            <label htmlFor="amountFrom">Amount From</label>
+            <InputNumber
+              id="amountFrom"
+              value={tempFilters.amountFrom || null}
+              onValueChange={(e) => setTempFilters({ ...tempFilters, amountFrom: e.value || undefined })}
+              placeholder="0.00"
+            />
+          </div>
+
+          <div className="field col-12 md:col-6">
+            <label htmlFor="amountTo">Amount To</label>
+            <InputNumber
+              id="amountTo"
+              value={tempFilters.amountTo || null}
+              onValueChange={(e) => setTempFilters({ ...tempFilters, amountTo: e.value || undefined })}
+              placeholder="0.00"
+            />
+          </div>
+
+          {/* Date range */}
+          <div className="field col-12 md:col-6">
+            <label htmlFor="dateFrom">Date From</label>
+            <Calendar
+              id="dateFrom"
+              value={tempFilters.dateFrom ? new Date(tempFilters.dateFrom) : null}
+              onChange={(e) => setTempFilters({ 
+                ...tempFilters, 
+                dateFrom: e.value ? e.value.toISOString().split('T')[0] : undefined 
+              })}
+              dateFormat="yy-mm-dd"
+              placeholder="Select Date"
+              showIcon
+            />
+          </div>
+
+          <div className="field col-12 md:col-6">
+            <label htmlFor="dateTo">Date To</label>
+            <Calendar
+              id="dateTo"
+              value={tempFilters.dateTo ? new Date(tempFilters.dateTo) : null}
+              onChange={(e) => setTempFilters({ 
+                ...tempFilters, 
+                dateTo: e.value ? e.value.toISOString().split('T')[0] : undefined 
+              })}
+              dateFormat="yy-mm-dd"
+              placeholder="Select Date"
+              showIcon
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-content-end gap-2 mt-4">
+          <Button
+            label="Clear Filters"
+            outlined
+            onClick={handleClearFilters}
+          />
+          <Button
+            label="Apply Filters"
+            onClick={handleApplyFilters}
+          />
+        </div>
+      </Dialog>
+    );
+  };
+
   return (
     <>
       <div className='justify-between flex items-center gap-3 mb-2 w-full'>
-        {/* <div className=''>
-          <TextInput
-            placeholder='Search orders...'
-            leftIcon={<CiSearch />}
-            onChange={debouncedSearch}
-            value={searchValue}
-            // ifSearchBar="bg-white"
-          />
-        </div> */}
-
         {/* <div >
           <CategoryNavigation
             categories={[
@@ -395,11 +506,34 @@ export default function OrdersTable({
             handleCategoryChange={handleCategoryChange}
           />
         </div> */}
+
+        <div className='w-full max-w-md'>
+          <TextInput
+            placeholder='Search orders...'
+            leftIcon={<CiSearch />}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            value={globalFilter}
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            icon="pi pi-filter"
+            label="Filter By"
+            outlined
+            onClick={openFilterDialog}
+          />
+          <Button
+            icon="pi pi-refresh"
+            label="Refresh"
+            onClick={loadLazyData}
+          />
+        </div>
       </div>
     
       <div className='card rounded-xl p-4 bg-white border border-gray-200'>
           <DataTable
-            value={matchedOrders ?? []}
+            value={lazyOrders ?? []}
             lazy
             first={lazyState.first} 
             onPage={onPage}
@@ -439,6 +573,9 @@ export default function OrdersTable({
             <Column field='action' header='Action' body={actionTemplate} />
           </DataTable>
       </div>
+
+      {/* Filter Dialog */}
+      {renderFilterDialog()}
     </>
   );
 }
