@@ -22,6 +22,8 @@ const ENDPOINTS = {
   MERCHANTS: `users/merchants`, /** all sellers **/
   CUSTOMERS: `users/customers`, /** all users who have made a purchase **/
 
+  USER: `users/`,
+
   // Accessory
   ACCESSORY: `accessories/`,
   CREATE_ACCESSORY: `accessories/create`,
