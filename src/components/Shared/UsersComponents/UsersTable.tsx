@@ -81,7 +81,7 @@ export default function UsersTable({
     return (
       <div className='flex items-center gap-3'>
         <Link
-          href={`/admin/customers/${customer.id}?edit=false`}
+          href={`/admin/customers/${customer._id}?edit=false`}
           className='text-xl text-neutral'
         >
           <FaEye />

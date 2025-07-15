@@ -50,7 +50,7 @@ export default function MerchantsTable({
     return (
       <div className='flex items-center gap-3'>
         <Link
-          href={`/admin/customers/${customer.id}?edit=false`}
+          href={`/dashboards/merchants/${customer._id}?edit=false`}
           className='text-xl text-neutral'
         >
           <FaEye />
