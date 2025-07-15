@@ -1,5 +1,5 @@
 export interface SliderImageType {
-    id: string
+    _id: string
     image: string
 }
 

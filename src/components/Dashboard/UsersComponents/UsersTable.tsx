@@ -128,11 +128,12 @@ export default function UsersTable({
         toast.loading("Deleting user...");
   
         httpService
-          .deleteById(`${ENDPOINTS.CUSTOMERS}/${customerId}`, `Bearer ${token}`)
+          .deleteById(`users/${customerId}`, `Bearer ${token}`)
           .then((apiRes) => {  
             toast.dismiss();
             if (apiRes.success) {
               toast.success('User deleted.');
+              loadLazyData();
             }
           });
       } catch (error: any) {

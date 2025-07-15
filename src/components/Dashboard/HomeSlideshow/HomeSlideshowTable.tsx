@@ -57,7 +57,7 @@ export default function HomeSlideshowTable({
   function actionTemplate(slideshow: SliderImageType) {
     return (
       <div className='flex items-center justify-end gap-3'>
-        <button onClick={() => deleteSliderImage(slideshow.id)}>
+        <button onClick={() => deleteSliderImage(slideshow._id)}>
           <MdOutlineDelete className='text-xl' />
         </button>
       </div>
@@ -73,7 +73,7 @@ export default function HomeSlideshowTable({
             height={100}
             width={100}
             className='h-12 w-12 bg-[#1b1b1b] rounded-md object-cover'
-            alt={String(slideshow.id)}
+            alt={String(slideshow._id)}
           />
         ) : (
           <div className='h-12 w-12 bg-[#1b1b1b] rounded-md'></div>
