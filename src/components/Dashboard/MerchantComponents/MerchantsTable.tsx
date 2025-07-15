@@ -127,7 +127,7 @@ export default function MerchantsTable({
     return (
       <div className='flex items-center gap-3'>
         <Link
-          href={`/admin/customers/${customer.id}?edit=false`}
+          href={`/dashboard/merchants/${customer._id}?edit=false`}
           className='text-xl text-neutral'
         >
           <FaEye />
@@ -233,14 +233,14 @@ export default function MerchantsTable({
         selection={selectedMerchants}
         selectionMode={rowClick ? null : 'multiple'}
         onSelectionChange={handleChangeSelectedMerchants}
-        dataKey='id'
+        dataKey='_id'
         tableStyle={{ minWidth: '20rem' }}
         rows={10}
         rowsPerPageOptions={[20, 50, 100, 250]}
         className='rounded-md'
         sortOrder={-1}
         sortField='createdAt'
-        onRowClick={(e) => router.push(`/admin/users/${e.data.id}`)}
+        onRowClick={(e) => router.push(`/admin/users/${e.data._id}`)}
       >
         <Column
           selectionMode='multiple'
