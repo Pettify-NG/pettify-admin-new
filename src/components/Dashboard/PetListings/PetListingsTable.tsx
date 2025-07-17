@@ -18,17 +18,16 @@ import HTTPService from "@/services/http";
 import { IPet } from "@/interfaces/pet";
 import ENDPOINTS from "@/config/ENDPOINTS";
 import { formatCurrency, calculatePetAge } from "@/helpers";
-import useLocalStorage from "@/hooks/useLocalStorage";
 import Button from "@/components/Global/Button";
 import Modal from "@/components/Global/Modal";
 import { paginatorTemplate } from "@/components/Dashboard/OrdersComponents/OrdersTable";
+import { useDebounce } from "@/hooks/useDebounce";
+import TextInput from "@/components/Global/TextInput";
+import { CiSearch } from "react-icons/ci";
 
 interface IPetListingsTable {
-    searchValue: string;
-    selectedDate: number | null;
-    petListings?: any | undefined;
-    handleChangeSelectedPetListings: (e: any) => void;
-    selectedPetListings: any;
+  handleChangeSelectedPetListings: (e: any) => void;
+  selectedPetListings: any;
 }
 
 export interface LazyTableState { 
@@ -42,8 +41,6 @@ export interface LazyTableState {
 }
 
 export default function PetListingsTable ({
-    searchValue,
-    selectedDate,
     handleChangeSelectedPetListings,
     selectedPetListings,
 }: IPetListingsTable) {
@@ -54,7 +51,7 @@ export default function PetListingsTable ({
   
     const router = useRouter();
 
-    const [timeFilter, setTimeFilter] = useState<string>("All-time");
+    const [globalFilter, setGlobalFilter] = useState<string>('');
   
     const [rowClick, setRowClick] = useState<boolean>(true);
     const [totalRecords, setTotalRecords] = useState<number>(0); 
@@ -67,46 +64,63 @@ export default function PetListingsTable ({
        page: 0, 
     }); 
 
-    const loadLazyData = useCallback(() => { 
-        setLoading(true); 
+    const debouncedGlobalFilter = useDebounce(globalFilter, 300);
+  
+    const loadLazyData = useCallback(() => {
+        setLoading(true);
+  
+        const fetchData = async () => {
+          try {
+            const cookies = new Cookies();
+            const token = cookies.get('pettify-token');
+  
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  
+            const params = new URLSearchParams({
+              page: ((lazyState.page ?? 0) + 1).toString(),
+              limit: (lazyState.rows).toString(),
+              ...(debouncedGlobalFilter && { search : debouncedGlobalFilter }),
+            });
+  
+            const response = await fetch(`${baseUrl}/api/v1/pets/admin?${params}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                cache: 'no-store',
+            })
+  
+            if (!response.ok) {
+              throw new Error('An error occured.');
+            }
+            
+            const data = await response.json();
+  
+            if (data.data) {
+                setTotalRecords(data.meta.totalRecords);
+                setTotalPages(data.meta.totalPages);
+                setLazyListings(data.data); 
+            }
+          
+          } catch(error: any) {
+            toast.error(error.message);
+  
+            console.error('There was a problem with the fetch operation:', error);
+          } finally {
+            setLoading(false);
+          };
+        };
     
-        //imitate delay of a backend call 
-            const fetchData = () => { 
-                const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL; 
-         
-                fetch(`${baseUrl}/api/v1/pets/admin?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}`, { 
-                  headers: {
-                    "Authorization": `Bearer ${token}`,
-                  },
-                  cache: 'no-store', 
-                }).then(response => { 
-                    if (!response.ok) { 
-                        throw new Error('Network response was not ok'); 
-                    } 
-                    return response.json(); 
-                }).then(data => { 
-                        setTotalRecords(data.meta.totalRecords); 
-                        setTotalPages(data.meta.totalPages); 
-                        setLazyListings(data.data); 
-
-                        setLoading(false); 
-                }).catch(error => { 
-                    toast.error(error.message); 
-  //                   console.error('There was a problem with the fetch operation:', error); 
-                }); 
-            }; 
-         
-            fetchData(); 
-    }, [lazyState, token]);
+        fetchData();
+    }, [lazyState, debouncedGlobalFilter]);
     
     useEffect(() => { 
-        loadLazyData(); 
-    }, [loadLazyData]); 
+      loadLazyData(); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedGlobalFilter]); 
     
-     const onPage = (event: DataTablePageEvent) => {  
-        setlazyState(event);
-        console.log(event); 
-     }; 
+    const onPage = (event: DataTablePageEvent) => {  
+      setlazyState(event);
+    }; 
 
     const ageTemplate = (listing: IPet) => {
       if(!listing.date_of_birth) {
@@ -219,24 +233,6 @@ export default function PetListingsTable ({
         </div>
       );
     }
-    
-    const getListingsByDate = useMemo(() => {
-      if (selectedDate) {
-        return lazyListings?.filter(
-          (listing) => moment(listing.createdAt).valueOf() >= selectedDate
-        );
-      } else return lazyListings;
-    }, [lazyListings, selectedDate]);
-  
-    const matchedListings = useMemo(() => {
-      if (searchValue.trim().length === 0) return getListingsByDate;
-  
-      return getListingsByDate?.filter(
-        (listing) =>
-          listing.breed.toLowerCase().includes(searchValue) ||
-          listing.description.toLowerCase().includes(searchValue)
-      );
-    }, [getListingsByDate, searchValue]);
   
     const rowClassTemplate = (data: IPet) => {
       return {
@@ -246,76 +242,83 @@ export default function PetListingsTable ({
   
     return (
       <div>
-      <div className='card rounded-xl p-4 bg-white border border-gray-200'>
-
-        <div className='px-4 flex flex-col w-full justify-between lg:flex-row lg:items-center gap-8 mb-8'>
-          <p className='font-bold text-xl text-gray-700'>All Pet Listings</p>
-        </div>
-        
-        <DataTable
-          value={matchedListings ?? []}
-          lazy 
-          first={lazyState.first}  
-          onPage={onPage} 
-          loading={loading} 
-          totalRecords={totalRecords}
-          selectionMode={rowClick ? null : 'multiple'}
-          selection={selectedPetListings!}
-          onSelectionChange={handleChangeSelectedPetListings}
-          dataKey='_id'
-          tableStyle={{ minWidth: '30rem' }}
-          paginator
-          paginatorClassName='flex justify-between'
-          paginatorTemplate={paginatorTemplate(totalRecords, lazyState.page)}
-          rows={10}
-          // rowsPerPageOptions={[20, 50, 100]}
-          className='rounded-xl text-sm capitalize'
-          sortOrder={-1}
-          sortField='createdAt'
-          sortIcon={<IoIosArrowDown />}
-          showSelectAll
-          selectionAutoFocus={true}
-          alwaysShowPaginator={true}
-          onRowClick={(e) => router.push(`/dashboard/pets/${e.data._id}`)}
-          rowClassName={rowClassTemplate}
-        >
-          {/* <Column selectionMode='multiple' headerStyle={{ width: '3rem' }} /> */}
-          <Column field='listing' header='Listing' body={listingTemplate} />
-          <Column field="Seller" header="Seller" body={sellerTemplate}/>
-          <Column field='gender' header='Gender' sortable />
-          <Column field='category' header='Category' sortable />
-          <Column field='breed' header='Breed' sortable />
-          <Column field='date_of_birth' header='Age' body={ageTemplate} sortable />
-          <Column field='quantity' header='Quantity' sortable />
-          <Column
-            field='price'
-            header='Price'
-            body={amountTemplate}
-            sortable
-          />
-          <Column
-            field='action'
-            header='Action'
-            body={actionTemplate}
-          ></Column>
-          {/* <Column field='createdAt' header='Added' body={dateTemplate} sortable /> */}
-        </DataTable>
-
-        {/* Delete Pet Modal */}
-        <Modal
-          isOpen={deleteModal}
-          handleClose={() => setDeleteModal(false)}
-          title='Delete Pet'
-        > 
-          <h3 className='mb-4 text-lg text-black'> Are you sure you want to delete this pet listing? </h3>
-          <div className='flex items-center gap-2 justify-between'>
-            <Button onClick={() => deletePet(toBeDeleted)}>Yes</Button>
-            <Button variant='outlined' onClick={() =>  setDeleteModal(false)}>
-              No
-            </Button>
+        <div className='justify-between flex items-center gap-3 mb-2 w-full'>
+          <div className='w-full max-w-md'>
+            <TextInput
+              placeholder='Search pet listings by breed...'
+              leftIcon={<CiSearch />}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              value={globalFilter}
+            />
           </div>
-        </Modal>
-      </div>
+        </div>
+
+        <div className='card rounded-xl p-4 bg-white border border-gray-200'>
+          
+          <DataTable
+            value={lazyListings ?? []}
+            lazy 
+           first={lazyState.first}  
+           onPage={onPage} 
+           loading={loading} 
+           totalRecords={totalRecords}
+            selectionMode={rowClick ? null : 'multiple'}
+            selection={selectedPetListings!}
+            onSelectionChange={handleChangeSelectedPetListings}
+            dataKey='_id'
+            tableStyle={{ minWidth: '30rem' }}
+            paginator
+            paginatorClassName='flex justify-between'
+            paginatorTemplate={paginatorTemplate(totalRecords, lazyState.page)}
+            rows={10}
+            // rowsPerPageOptions={[20, 50, 100]}
+            className='rounded-xl text-sm capitalize'
+            sortOrder={-1}
+            sortField='createdAt'
+            sortIcon={<IoIosArrowDown />}
+           showSelectAll
+           selectionAutoFocus={true}
+            alwaysShowPaginator={true}
+            onRowClick={(e) => router.push(`/dashboard/pets/${e.data._id}`)}
+            rowClassName={rowClassTemplate}
+          >
+            {/* <Column selectionMode='multiple' headerStyle={{ width: '3rem' }} /> */}
+            <Column field='Pet' header='Listing' body={listingTemplate} />
+            <Column field='gender' header='Gender' sortable />
+            <Column field='category' header='Category' sortable />
+            <Column field='breed' header='Breed' sortable />
+            <Column field="Seller" header="Seller" body={sellerTemplate}/>
+            <Column field='date_of_birth' header='Age' body={ageTemplate} sortable />
+            <Column field='quantity' header='Quantity' sortable />
+            <Column
+              field='price'
+              header='Price'
+              body={amountTemplate}
+              sortable
+            />
+            <Column
+              field='action'
+              header='Action'
+              body={actionTemplate}
+            ></Column>
+            {/* <Column field='createdAt' header='Added' body={dateTemplate} sortable /> */}
+          </DataTable>
+
+          {/* Delete Pet Modal */}
+          <Modal
+            isOpen={deleteModal}
+            handleClose={() => setDeleteModal(false)}
+            title='Delete Pet'
+          > 
+            <h3 className='mb-4 text-lg text-black'> Are you sure you want to delete this pet listing? </h3>
+            <div className='flex items-center gap-2 justify-between'>
+              <Button onClick={() => deletePet(toBeDeleted)}>Yes</Button>
+              <Button variant='outlined' onClick={() =>  setDeleteModal(false)}>
+                No
+              </Button>
+            </div>
+          </Modal>
+        </div>
       </div>
     );
 }

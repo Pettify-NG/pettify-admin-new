@@ -143,7 +143,7 @@ export default function OrdersTable({
 
   const [timeFilter, setTimeFilter] = useState<string>("All-time");
 
-  const loadLazyData = useCallback(() => {
+  const loadLazyData = useCallback((stateOverride?: LazyTableState) => {
       setLoading(true);
 
       const fetchData = async () => {
@@ -154,17 +154,30 @@ export default function OrdersTable({
 
           const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+          const state = stateOverride || lazyState;
+
+          // const params = new URLSearchParams({
+          //   page: ((lazyState.page ?? 0) + 1).toString(),
+          //   limit: (lazyState.rows).toString(),
+          //   type: timeFilter,
+          //   ...(debouncedGlobalFilter && { search: debouncedGlobalFilter }),
+          //   ...(lazyState?.filters?.status && { status: lazyState.filters.status }),
+          //   ...(lazyState?.filters?.amountFrom && { amountFrom: lazyState.filters.amountFrom.toString() }),
+          //   ...(lazyState?.filters?.amountTo && { amountTo: lazyState.filters.amountTo.toString() }),
+          //   ...(lazyState?.filters?.dateFrom && { dateFrom: lazyState.filters.dateFrom }),
+          //   ...(lazyState?.filters?.dateTo && { dateTo: lazyState.filters.dateTo }),
+          // });
+
           const params = new URLSearchParams({
             page: ((lazyState.page ?? 0) + 1).toString(),
             limit: (lazyState.rows).toString(),
             type: timeFilter,
             ...(debouncedGlobalFilter && { search: debouncedGlobalFilter }),
-            ...(lazyState?.filters?.status && { status: lazyState.filters.status }),
-            // ...(lazyState?.filters?.position && { position: lazyState.filters.position }),
-            ...(lazyState?.filters?.amountFrom && { amountFrom: lazyState.filters.amountFrom.toString() }),
-            ...(lazyState?.filters?.amountTo && { amountTo: lazyState.filters.amountTo.toString() }),
-            ...(lazyState?.filters?.dateFrom && { dateFrom: lazyState.filters.dateFrom }),
-            ...(lazyState?.filters?.dateTo && { dateTo: lazyState.filters.dateTo }),
+            ...(state?.filters?.status && { status: state.filters.status }),
+            ...(state?.filters?.amountFrom && { amountFrom: state.filters.amountFrom.toString() }),
+            ...(state?.filters?.amountTo && { amountTo: state.filters.amountTo.toString() }),
+            ...(state?.filters?.dateFrom && { dateFrom: state.filters.dateFrom }),
+            ...(state?.filters?.dateTo && { dateTo: state.filters.dateTo }),
           });
 
           const response = await fetch(`${baseUrl}/api/v1/${ENDPOINTS.ORDERS}?${params}`, {
@@ -210,7 +223,7 @@ export default function OrdersTable({
 
     setlazyState(newLazyState);
     setShowFilterDialog(false);
-    loadLazyData();
+    loadLazyData(newLazyState);
   }
 
   // Clear filters
@@ -526,7 +539,7 @@ export default function OrdersTable({
           <Button
             icon="pi pi-refresh"
             label="Refresh"
-            onClick={loadLazyData}
+            onClick={() => loadLazyData()}
           />
         </div>
       </div>

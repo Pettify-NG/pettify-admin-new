@@ -1,46 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import react, { useState, useMemo, ChangeEvent } from "react";
-import { FaPlus } from "react-icons/fa";
+import { useState } from "react";
 import { FaShoppingBag } from "react-icons/fa";
 
 import Pagination from "@/components/Shared/Paginatioin";
 import PetListingsTable from "./PetListingsTable";
 
 export default function PetListingPage () {
-
-    const [searchValue, setSearchValue] = useState<string>('');
-    const [selectedDate, setSelectedDate] = useState<number | null>(null);
     const [selectedPetListings, setSelectedPetListings] = useState<any>([]);
 
     const handleChangeSelectedPetListings = (e: any) => {
       console.log(e.value);
 
       setSelectedPetListings(e.value);
-    };
-
-    const debouncedSearch = useMemo(() => {
-      let timer: NodeJS.Timeout;
-
-      const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          setSearchValue(e.target.value);
-        }, 500);
-      };
-
-      return handleSearchChange;
-    }, []);
-
-    const handleSelectDate = (
-      date: Date | (Date | null)[] | Date[] | null | undefined
-    ) => {
-      if (date) {
-        const formatted = new Date(date as Date).getTime();
-
-        setSelectedDate(formatted);
-      } else setSelectedDate(null);
     };
 
     return (
@@ -70,8 +43,6 @@ export default function PetListingPage () {
     
           {/* Pet listings Table */}
           <PetListingsTable
-            selectedDate={selectedDate}
-            searchValue={searchValue.toLowerCase()}
             handleChangeSelectedPetListings={handleChangeSelectedPetListings}
             selectedPetListings={selectedPetListings}
           />

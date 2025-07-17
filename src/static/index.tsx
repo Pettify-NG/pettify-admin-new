@@ -27,11 +27,11 @@ export const adminLinks: ISidebarLink[] = [
     icon: <FaShoppingCart />,
     page: '/dashboard/orders',
   },
-  {
-    name: 'users',
-    icon: <IoMdPerson />,
-    page: '/dashboard/users',
-  },
+  // {
+  //   name: 'users',
+  //   icon: <IoMdPerson />,
+  //   page: '/dashboard/users',
+  // },
   {
     name: 'merchants',
     icon: <IoMdPerson />,

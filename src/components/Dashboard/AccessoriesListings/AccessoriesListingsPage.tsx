@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import react, { useState, useMemo, ChangeEvent } from "react";
+import { useState } from "react";
 import { FaPlus } from "react-icons/fa";
 import { FaShoppingBag } from "react-icons/fa";
 
@@ -9,9 +9,6 @@ import Pagination from "@/components/Shared/Paginatioin";
 import AccessoriesListingsTable from "./AccessoriesListingTable";
 
 export default function AccessoriesListingPage () {
-
-    const [searchValue, setSearchValue] = useState<string>('');
-    const [selectedDate, setSelectedDate] = useState<number | null>(null);
     const [selectedListings, setSelectedPetListings] = useState<any>([]);
 
     const handleChangeSelectedListings = (e: any) => {
@@ -19,29 +16,6 @@ export default function AccessoriesListingPage () {
 
       setSelectedPetListings(e.value);
     };
-
-    // const debouncedSearch = useMemo(() => {
-    //   let timer: NodeJS.Timeout;
-
-    //   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
-    //     clearTimeout(timer);
-    //     timer = setTimeout(() => {
-    //       setSearchValue(e.target.value);
-    //     }, 500);
-    //   };
-
-    //   return handleSearchChange;
-    // }, []);
-
-    // const handleSelectDate = (
-    //   date: Date | (Date | null)[] | Date[] | null | undefined
-    // ) => {
-    //   if (date) {
-    //     const formatted = new Date(date as Date).getTime();
-
-    //     setSelectedDate(formatted);
-    //   } else setSelectedDate(null);
-    // };
 
     return (
         <section>
@@ -70,8 +44,6 @@ export default function AccessoriesListingPage () {
     
           {/* Product listings Table */}
           <AccessoriesListingsTable
-            selectedDate={selectedDate}
-            searchValue={searchValue.toLowerCase()}
             handleChangeSelectedListings={handleChangeSelectedListings}
             selectedListings={selectedListings}
           />

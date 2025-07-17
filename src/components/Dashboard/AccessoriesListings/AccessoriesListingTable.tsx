@@ -16,17 +16,17 @@ import { IoIosArrowDown } from "react-icons/io";
 
 import { IListing } from "@/interfaces/listings";
 import { formatCurrency, calculatePetAge } from "@/helpers";
-import useLocalStorage from "@/hooks/useLocalStorage";
 import { paginatorTemplate } from "@/components/Dashboard/OrdersComponents/OrdersTable";
 import HTTPService from "@/services/http";
 import Modal from "@/components/Global/Modal";
 import ENDPOINTS from "@/config/ENDPOINTS";
 import Button from "@/components/Global/Button";
 import IAccessory from "@/interfaces/accessory";
+import { useDebounce } from "@/hooks/useDebounce";
+import { CiSearch } from "react-icons/ci";
+import TextInput from "@/components/Global/TextInput";
 
 interface IPetListingsTable {
-    searchValue: string;
-    selectedDate: number | null;
     handleChangeSelectedListings: (e: any) => void;
     selectedListings: any;
 }
@@ -42,8 +42,6 @@ export interface LazyTableState {
 }
 
 export default function AccessoriesListingsTable ({
-    searchValue,
-    selectedDate,
     handleChangeSelectedListings,
     selectedListings,
 }: IPetListingsTable) {  
@@ -65,44 +63,62 @@ export default function AccessoriesListingsTable ({
        page: 0, 
     }); 
 
-   const [timeFilter, setTimeFilter] = useState<string>("All-time");
+    const [timeFilter, setTimeFilter] = useState<string>("All-time");
 
-    const loadLazyData = useCallback(() => { 
-          setLoading(true); 
-     
-          //imitate delay of a backend call 
-              const fetchData = () => { 
-                  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL; 
-           
-                  fetch(`${baseUrl}/api/v1/accessories/admin?page=${(lazyState.page ?? 0) + 1}&limit=${lazyState.rows}&type=${timeFilter}`, { 
-                    headers: {
-                      "Authorization": `Bearer ${token}`,
-                    },
-                    cache: 'no-store', 
-                  }).then(response => { 
-                      if (!response.ok) { 
-                          throw new Error('Network response was not ok'); 
-                      } 
-                      return response.json(); 
-                  }).then(data => { 
-                          console.log(data.meta); 
-                          setTotalRecords(data.meta.totalRecords); 
-                          setTotalPages(data.meta.totalPages); 
-                          console.log(data.data); 
-                          setLazyListings(data.data); 
-                          setLoading(false); 
-                  }).catch(error => { 
-                      toast.error(error.message); 
-                      console.error('There was a problem with the fetch operation:', error); 
-                  }); 
-              }; 
-           
-              fetchData(); 
-    }, [lazyState, timeFilter, token]);
+    const [globalFilter, setGlobalFilter] = useState<string>('');
+    const debouncedGlobalFilter = useDebounce(globalFilter, 300);
+  
+    const loadLazyData = useCallback(() => {
+        setLoading(true);
+  
+        const fetchData = async () => {
+          try {
+            const cookies = new Cookies();
+            const token = cookies.get('pettify-token');
+  
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  
+            const params = new URLSearchParams({
+              page: ((lazyState.page ?? 0) + 1).toString(),
+              limit: (lazyState.rows).toString(),
+              ...(debouncedGlobalFilter && { search : debouncedGlobalFilter }),
+            });
+  
+            const response = await fetch(`${baseUrl}/api/v1/accessories/admin?${params}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                cache: 'no-store',
+            })
+  
+            if (!response.ok) {
+              throw new Error('An error occured.');
+            }
+            
+            const data = await response.json();
+  
+            if (data.data) {
+                setTotalRecords(data.meta.totalRecords);
+                setTotalPages(data.meta.totalPages);
+                setLazyListings(data.data); 
+            }
+          
+          } catch(error: any) {
+            toast.error(error.message);
+  
+            console.error('There was a problem with the fetch operation:', error);
+          } finally {
+            setLoading(false);
+          };
+        };
     
-     useEffect(() => { 
-        loadLazyData(); 
-     }, [loadLazyData]); 
+        fetchData();
+    }, [lazyState, debouncedGlobalFilter]);
+    
+    useEffect(() => { 
+      loadLazyData(); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [debouncedGlobalFilter]); 
     
      const onPage = (event: DataTablePageEvent) => {  
         setlazyState(event);
@@ -214,24 +230,6 @@ export default function AccessoriesListingsTable ({
       );
     }
   
-    const getListingsByDate = useMemo(() => {
-      if (selectedDate) {
-        return lazyListings?.filter(
-          (listing) => moment(listing.createdAt).valueOf() >= selectedDate
-        );
-      } else return lazyListings;
-    }, [lazyListings, selectedDate]);
-  
-    const matchedListings = useMemo(() => {
-      if (searchValue.trim().length === 0) return getListingsByDate;
-  
-      return getListingsByDate?.filter(
-        (listing) =>
-          listing.breed.toLowerCase().includes(searchValue) ||
-          listing.description.toLowerCase().includes(searchValue)
-      );
-    }, [getListingsByDate, searchValue]);
-  
     const rowClassTemplate = (data: IListing) => {
       return {
           'cursor-pointer': data.id
@@ -240,71 +238,77 @@ export default function AccessoriesListingsTable ({
   
     return (
       <div>
-      <div className='card rounded-xl p-4 bg-white border border-gray-200'>
-
-        <div className='px-4 flex flex-col w-full justify-between lg:flex-row lg:items-center gap-8 mb-8'>
-          <p className='font-bold text-xl text-gray-700'>All listings</p>
-        </div>
-        
-        <DataTable
-          value={matchedListings ?? []}
-          lazy 
-          first={lazyState.first}  
-          onPage={onPage} 
-          loading={loading} 
-          totalRecords={totalRecords}
-          selectionMode={rowClick ? null : 'multiple'}
-          selection={selectedListings!}
-          onSelectionChange={handleChangeSelectedListings}
-          dataKey='_id'
-          paginator
-          paginatorClassName='flex justify-between'
-          paginatorTemplate={paginatorTemplate(totalRecords, lazyState.page)}
-          rows={10}
-          className='rounded-xl text-sm capitalize'
-          sortOrder={-1}
-          sortField='createdAt'
-          sortIcon={<IoIosArrowDown />}
-          showSelectAll
-          selectionAutoFocus={true}
-          alwaysShowPaginator={true}
-          onRowClick={(e) => router.push(`/dashboard/accessories/${e.data._id}`)}
-          rowClassName={rowClassTemplate}
-        >
-          <Column header='Accessory' body={listingTemplate} />
-          <Column field="Seller" header="Seller" body={sellerTemplate}/>
-          {/* <Column selectionMode='multiple' headerStyle={{ width: '3rem' }} /> */}
-          <Column field='category' header='Category' sortable />
-          <Column field='quantity' header='Quantity' sortable />
-          <Column
-            field='price'
-            header='Price'
-            body={amountTemplate}
-            sortable
-          />
-          <Column
-            field='action'
-            header='Action'
-            body={actionTemplate}
-          ></Column>
-          {/* <Column field='createdAt' header='Added' body={dateTemplate} sortable /> */}
-        </DataTable>
-
-        {/* Delete Accessory Modal */}
-        <Modal
-          isOpen={deleteModal}
-          handleClose={() => setDeleteModal(false)}
-          title='Delete Accessory'
-        > 
-          <h3 className='mb-4 text-lg text-black'> Are you sure you want to delete this accessory? </h3>
-          <div className='flex items-center gap-2 justify-between'>
-            <Button onClick={() => deleteAccessory(toBeDeleted)}>Yes</Button>
-            <Button variant='outlined' onClick={() =>  setDeleteModal(false)}>
-              No
-            </Button>
+        <div className='justify-between flex items-center gap-3 mb-2 w-full'>
+          <div className='w-full max-w-md'>
+            <TextInput
+              placeholder='Search accessories listings by name...'
+              leftIcon={<CiSearch />}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              value={globalFilter}
+            />
           </div>
-        </Modal>
-      </div>
+        </div>
+
+        <div className='card rounded-xl p-4 bg-white border border-gray-200'>        
+          <DataTable
+            value={lazyListings ?? []}
+            lazy 
+           first={lazyState.first}  
+           onPage={onPage} 
+           loading={loading} 
+           totalRecords={totalRecords}
+            selectionMode={rowClick ? null : 'multiple'}
+            selection={selectedListings!}
+            onSelectionChange={handleChangeSelectedListings}
+            dataKey='_id'
+            paginator
+            paginatorClassName='flex justify-between'
+            paginatorTemplate={paginatorTemplate(totalRecords, lazyState.page)}
+            rows={10}
+            className='rounded-xl text-sm capitalize'
+            sortOrder={-1}
+            sortField='createdAt'
+            sortIcon={<IoIosArrowDown />}
+           showSelectAll
+           selectionAutoFocus={true}
+            alwaysShowPaginator={true}
+            onRowClick={(e) => router.push(`/dashboard/accessories/${e.data._id}`)}
+            rowClassName={rowClassTemplate}
+          >
+            <Column header='Accessory' body={listingTemplate} />
+            <Column field="Seller" header="Seller" body={sellerTemplate}/>
+            {/* <Column selectionMode='multiple' headerStyle={{ width: '3rem' }} /> */}
+            <Column field='category' header='Category' sortable />
+            <Column field='quantity' header='Quantity' sortable />
+            <Column
+              field='price'
+              header='Price'
+              body={amountTemplate}
+              sortable
+            />
+            <Column
+              field='action'
+              header='Action'
+              body={actionTemplate}
+            ></Column>
+            {/* <Column field='createdAt' header='Added' body={dateTemplate} sortable /> */}
+          </DataTable>
+
+          {/* Delete Accessory Modal */}
+          <Modal
+            isOpen={deleteModal}
+            handleClose={() => setDeleteModal(false)}
+            title='Delete Accessory'
+          > 
+            <h3 className='mb-4 text-lg text-black'> Are you sure you want to delete this accessory? </h3>
+            <div className='flex items-center gap-2 justify-between'>
+              <Button onClick={() => deleteAccessory(toBeDeleted)}>Yes</Button>
+              <Button variant='outlined' onClick={() =>  setDeleteModal(false)}>
+                No
+              </Button>
+            </div>
+          </Modal>
+        </div>
       </div>
     );
 }

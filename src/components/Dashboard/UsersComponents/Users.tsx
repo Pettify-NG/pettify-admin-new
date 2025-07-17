@@ -4,13 +4,9 @@ import React, { useState, } from 'react';
 
 import Pagination from '../../Shared/Paginatioin';
 import UsersTable from './UsersTable';
-import { IUser, IUsers } from '@/interfaces/users';
+import { IUsers } from '@/interfaces/users';
 
 export default function Users() {
-  // const [selectedDate, setSelectedDate] = useState<
-  //   Date | (Date | null)[] | Date[] | null | number | undefined
-  // >(null);
-
   const [selectedUsers, setSelectedUsers] = useState<IUsers>([]);
 
   const handleChangeSelectedUser = (e: any) => {
