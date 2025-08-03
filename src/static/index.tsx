@@ -9,6 +9,7 @@ import { FaBone } from "react-icons/fa";
 import { FaShoppingCart } from "react-icons/fa";
 import { IoIosNotifications } from "react-icons/io";
 import { FaRegImage } from "react-icons/fa6";
+import { PiHandWithdrawFill } from "react-icons/pi";
 
 export const adminLinks: ISidebarLink[] = [
   { name: 'home', icon: <IoMdHome />, page: '/dashboard' },
@@ -27,11 +28,11 @@ export const adminLinks: ISidebarLink[] = [
     icon: <FaShoppingCart />,
     page: '/dashboard/orders',
   },
-  // {
-  //   name: 'users',
-  //   icon: <IoMdPerson />,
-  //   page: '/dashboard/users',
-  // },
+  {
+    name: 'users',
+    icon: <IoMdPerson />,
+    page: '/dashboard/users',
+  },
   {
     name: 'merchants',
     icon: <IoMdPerson />,
@@ -53,6 +54,7 @@ export const adminLinks: ISidebarLink[] = [
     page: `/dashboard/notifications`
   },
   { name: 'delivery-prices', icon: <IoMdSettings />, page: '/dashboard/delivery-prices' },
+  // { name: 'withdrawal requests', icon: <PiHandWithdrawFill />, page: "/dashboard/withdrawal-requests" }
   // { name: 'notification', icon: <LuMail />, page: '/admin/dashboard/notifications' },
 ];
 

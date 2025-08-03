@@ -6,19 +6,15 @@ import { DataTable, DataTableFilterMeta, DataTablePageEvent } from 'primereact/d
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { FaEye } from 'react-icons/fa';
-import { MdOutlineDelete } from 'react-icons/md';
-import { RxPencil2 } from 'react-icons/rx';
 import moment from 'moment';
 import { RiDeleteBin6Line } from "react-icons/ri";
-import { MdOutlineModeEdit } from "react-icons/md";
-import { IoIosArrowDown } from 'react-icons/io';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Cookies from 'universal-cookie';
+import { FaCircleUser } from "react-icons/fa6";
 
 import ENDPOINTS from '@/config/ENDPOINTS';
 import HTTPService from '@/services/http';
-import { formatCurrency, formatDate } from '@/helpers';
 import { IUser, IUsers } from '@/interfaces/users';
 import { paginatorTemplate } from '@/components/Shared/PaginatorTemplate';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -36,12 +32,10 @@ interface LazyTableState {
 }
 
 export default function UsersTable({
-  selectedUsers,
-  handleChangeSelectedUsers,
   userType,
 }: {
   userType: "customers" | "merchants" | "users"
-  selectedUsers: IUsers;
+  selectedUsers?: IUsers;
   handleChangeSelectedUsers?: (e: any) => void;
 }) {
   const httpService = new HTTPService();
@@ -80,9 +74,8 @@ export default function UsersTable({
             ...(debouncedGlobalFilter && { name: debouncedGlobalFilter }),
           });
 
-          // const endpoint = 
-
-          const response = await fetch(`${baseUrl}/api/v1/${userType === "customers" ? ENDPOINTS.CUSTOMERS : userType === "merchants" ? ENDPOINTS.MERCHANTS : ENDPOINTS.ALL_USERS}?${params}`, {
+          const type = userType === "customers" ? "customers" : userType === "merchants" ? "merchants" : "users";
+          const response = await fetch(`${baseUrl}/api/v1/${type === "customers" ? ENDPOINTS.CUSTOMERS : type === "merchants" ? ENDPOINTS.MERCHANTS : ENDPOINTS.ALL_USERS}?${params}`, {
               headers: {
                   Authorization: `Bearer ${token}`,
               },
@@ -116,10 +109,11 @@ export default function UsersTable({
   useEffect(() => {
     loadLazyData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedGlobalFilter]);
+  }, [debouncedGlobalFilter, lazyState]);
 
   const onPage = (event: DataTablePageEvent) => {
     setlazyState(event);
+    console.log(event);
   };
 
   const deleteCustomer = (customerId?: string) => {
@@ -146,10 +140,6 @@ export default function UsersTable({
 
   const dateTemplate = (customer: IUser) =>
     moment(customer.createdAt).format('MMM Do YYYY');
-
-//   function amountTemplate(customer: IUser) {
-//     return formatCurrency(customer.orderBalance);
-//   }
 
   function actionTemplate(customer: IUser) {
    
@@ -181,53 +171,26 @@ export default function UsersTable({
   function customerTemplate(customer: IUser) {
     return (
       <div className='flex items-center gap-4'>
-        <Image
-          src={customer.profileImage ?? ""}
-          alt='image'
-          width={20}
-          height={20}
-          className='h-12 w-12 bg-[#1b1b1b] rounded-md'
-        />
+        {
+          customer.profileImage ? 
+            <Image
+              src={customer.profileImage ?? ""}
+              alt='image'
+              width={20}
+              height={20}
+              sizes='20'
+              className='h-12 w-12 bg-[#1b1b1b] rounded-md'
+            />
+          : <FaCircleUser className="w-12 h-12"/>
+        }
 
         <div className='div capitalize'>
           <p className='text-xs font-medium'>{customer.firstname + " " + customer.lastname}</p>
           <p className='text-xs font-medium'>{customer.username}</p>
-          {/* <p className='text-xs text-neutral font-light'>{customer.email}</p>
-          <p className='text-xs text-neutral font-light'>{customer.phonenumber}</p> */}
         </div>
       </div>
     );
   }
-
-  const dateChangeHandler = (e: any) => {
-    // setSelectedCustomers(e.value);
-    handleChangeSelectedUsers!(e.value);
-  };
-
-//   function statusTemplate(customer: IUser) {
-//     const { status } = customer;
-
-//     let styles = '';
-
-//     switch (status) {
-//       case 'ACTIVATED':
-//         styles = 'bg-green-100 text-green-600';
-//         break;
-//       case 'SUSPENDED':
-//         styles = 'bg-red-100 text-red-600';
-//         break;
-//       default:
-//         styles = 'bg-yellow-100 text-yellow-600';
-//     }
-
-//     return (
-//       <span
-//         className={`p-2 px-4 text-xs font-semibold rounded-full capitalize ${styles}`}
-//       >
-//         {customer.status.toLowerCase() === "activated" ? "Active" : customer.status.toLowerCase() === "suspended" ? "Blocked" : customer.status}
-//       </span>
-//     );
-//   }
 
   const router = useRouter();
 

@@ -116,7 +116,7 @@ export default function PetListingsTable ({
     useEffect(() => { 
       loadLazyData(); 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedGlobalFilter]); 
+    }, [debouncedGlobalFilter, lazyState]); 
     
     const onPage = (event: DataTablePageEvent) => {  
       setlazyState(event);

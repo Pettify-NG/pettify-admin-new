@@ -251,7 +251,7 @@ export default function OrdersTable({
   useEffect(() => {
     loadLazyData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedGlobalFilter]);
+  }, [debouncedGlobalFilter, lazyState]);
 
   // loadLazyData, debouncedGlobalFilter, lazyState.filters
 
