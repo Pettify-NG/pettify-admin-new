@@ -54,7 +54,7 @@ export const adminLinks: ISidebarLink[] = [
     page: `/dashboard/notifications`
   },
   { name: 'delivery-prices', icon: <IoMdSettings />, page: '/dashboard/delivery-prices' },
-  // { name: 'withdrawal requests', icon: <PiHandWithdrawFill />, page: "/dashboard/withdrawal-requests" }
+  { name: 'withdrawal requests', icon: <PiHandWithdrawFill />, page: "/dashboard/withdrawal-requests" }
   // { name: 'notification', icon: <LuMail />, page: '/admin/dashboard/notifications' },
 ];
 

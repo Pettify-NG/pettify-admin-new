@@ -76,10 +76,11 @@ export function WithdrawalListingTable () {
                 const params = new URLSearchParams({
                   page: ((lazyState.page ?? 0) + 1).toString(),
                   limit: (lazyState.rows).toString(),
+                  status: "pending",
                   ...(debouncedGlobalFilter && { search : debouncedGlobalFilter }),
                 });
       
-                const response = await fetch(`${baseUrl}/api/v1/accessories/admin?${params}`, {
+                const response = await fetch(`${baseUrl}/api/v1/admin/withdrawals?${params}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
