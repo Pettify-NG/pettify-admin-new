@@ -167,8 +167,9 @@ export function WithdrawalListingTable () {
     async function rejectWithdrawal (id: string, adminNote: string) {
         toast.loading('Submitting...');
   
-        const res = await httpService.deleteById(
-          `${ENDPOINTS.ACCESSORY}/${id}`,
+        const res = await httpService.patch(
+          `admin/withdrawals/${id}/approve`,
+          {},
           `Bearer ${token}`
         );
   
@@ -198,7 +199,7 @@ export function WithdrawalListingTable () {
         toast.loading("Submitting...");
 
         const response = await httpService.patch(
-            `${ENDPOINTS.ACCESSORY}/${id}`,
+            `admin/withdrawals/${id}/approve`,
             {},
             `Bearer ${token}`
         );
@@ -326,10 +327,11 @@ export function WithdrawalListingTable () {
           > 
             <h3 className='mb-4 text-lg text-black'> Are you sure you want to approve this withdrawal request? </h3>
             <div className='flex items-center gap-2 justify-between'>
-              <Button onClick={() => approveWithdrawal(withdrawal)}>Yes</Button>
               <Button variant='outlined' onClick={() =>  setApproveModal(false)}>
                 No
               </Button>
+
+              <Button onClick={() => approveWithdrawal(withdrawal)}>Yes</Button>
             </div>
           </Modal>
 
@@ -340,11 +342,12 @@ export function WithdrawalListingTable () {
                 title='Delete Accessory'
             > 
                 <h3 className='mb-4 text-lg text-black'> Are you sure you want to reject this withdrawal request? </h3>
-                <div className='flex items-center gap-2 justify-between'>
-                    <Button onClick={() => rejectWithdrawal(withdrawal, "Balance exceeded.")}>Yes</Button>
+                <div className='flex items-center gap-2 mb-4 justify-between'>
                     <Button variant='outlined' onClick={() =>  setRejectModal(false)}>
                         No
                     </Button>
+
+                    <Button onClick={() => rejectWithdrawal(withdrawal, "Balance exceeded.")}>Yes</Button>
                 </div>
             </Modal>
         </div>
