@@ -230,7 +230,13 @@ export function WithdrawalListingTable () {
             styles = 'bg-orange-100 text-orange-600';
             break;
           case 'approved':
+            styles = 'bg-purple-100 text-purple-600';
+            break;
+          case 'sucessful':
             styles = 'bg-green-100 text-green-600';
+            break;
+          case 'failed':
+            styles = 'bg-red-100 text-red-600';
             break;
           case 'rejected':
             styles = 'bg-red-100 text-red-600';
@@ -242,7 +248,7 @@ export function WithdrawalListingTable () {
     
         return (
           <span className={`p-2 px-4 text-xs font-medium rounded-full whitespace-nowrap ${styles}`}>
-            {status}
+            {withdrawal.status}
           </span>
         );
     }
@@ -304,12 +310,12 @@ export function WithdrawalListingTable () {
               body={(withdrawal) => amountTemplate(withdrawal, "amount")}
               sortable
             />
-            <Column
+            {/* <Column
               field='wallet.balance'
               header='Wallet Balance'
               body={(withdrawal) => amountTemplate(withdrawal, "balance")}
               sortable
-            />
+            /> */}
             <Column field='status' header='Status' sortable body={statusTemplate} />
             <Column field='createdAt' header='Added' body={dateTemplate} sortable />
             <Column
