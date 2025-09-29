@@ -19,8 +19,9 @@ const ENDPOINTS = {
   // Users
   USERS: `users/users`, /** those who have never made a purchase **/ 
   ALL_USERS: `users`,  /** all users - if they've made a purchase or not **/
-  MERCHANTS: `users/merchants`, /** all sellers **/
+  MERCHANTS: `users/merchants`, /** all sellers - i.e all users with the role of "seller". **/
   CUSTOMERS: `users/customers`, /** all users who have made a purchase **/
+  BUYERS: `users/buyers`, /** all users who register from the app - i.e. all those with the role of "buyers" */
 
   USER: `users/`,
 
@@ -44,5 +45,3 @@ const ENDPOINTS = {
 };
 
 export default ENDPOINTS;
-
-  

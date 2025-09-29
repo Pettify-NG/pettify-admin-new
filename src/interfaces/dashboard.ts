@@ -9,4 +9,6 @@ export interface IDashboardData {
     totalAccessories: number
     totalBalance: number
     pendingWalletBalance?: number
+    totalSellers?: number
+    totalBuyers?: number
 }

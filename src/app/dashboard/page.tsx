@@ -9,15 +9,15 @@ import useFetch from '@/hooks/useFetch';
 import LoadingScreen from '@/components/Global/LoadingScreen';
 
 export default function SellerDashboard() {
-  const fetchUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/users/dashboard`
+  const fetchUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/admin/dashboard`
 
   const cookies = new Cookies();
   const token = cookies.get("pettify-token");
 
   const options = {
-      headers: {
-          Authorization: `Bearer ${token}`
-      }
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
   }
 
   const { data, error, isLoading, refetch } = useFetch<IDashboardData>(fetchUrl, options);

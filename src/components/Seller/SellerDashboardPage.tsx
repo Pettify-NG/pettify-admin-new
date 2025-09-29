@@ -31,6 +31,8 @@ export default function SellerDashboardPage ({
                 totalOrders={dashboardData?.totalOrders}
                 totalPets={dashboardData?.totalPets}
                 totalAccessories={dashboardData?.totalAccessories}
+                totalSellers={dashboardData?.totalSellers}
+                totalBuyers={dashboardData?.totalBuyers}
             />
 
             {/* Add pet listing button. */}

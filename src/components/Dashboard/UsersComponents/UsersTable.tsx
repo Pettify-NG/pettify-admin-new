@@ -75,7 +75,7 @@ export default function UsersTable({
           });
 
           const type = userType === "customers" ? "customers" : userType === "merchants" ? "merchants" : "users";
-          const response = await fetch(`${baseUrl}/api/v1/${type === "customers" ? ENDPOINTS.CUSTOMERS : type === "merchants" ? ENDPOINTS.MERCHANTS : ENDPOINTS.ALL_USERS}?${params}`, {
+          const response = await fetch(`${baseUrl}/api/v1/${type === "customers" ? ENDPOINTS.CUSTOMERS : type === "merchants" ? ENDPOINTS.MERCHANTS : ENDPOINTS.BUYERS}?${params}`, {
               headers: {
                   Authorization: `Bearer ${token}`,
               },
