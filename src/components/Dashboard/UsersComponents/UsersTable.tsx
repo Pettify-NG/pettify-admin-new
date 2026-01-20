@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Cookies from 'universal-cookie';
 import { FaCircleUser } from "react-icons/fa6";
+import { utils, writeFile, read } from 'xlsx';
+import { FaTableCells } from "react-icons/fa6";
 
 import ENDPOINTS from '@/config/ENDPOINTS';
 import HTTPService from '@/services/http';
@@ -20,6 +22,7 @@ import { paginatorTemplate } from '@/components/Shared/PaginatorTemplate';
 import { useDebounce } from '@/hooks/useDebounce';
 import { CiSearch } from 'react-icons/ci';
 import TextInput from '@/components/Global/TextInput';
+import Button from '@/components/Global/Button';
 
 interface LazyTableState {
   first: number;
@@ -58,16 +61,13 @@ export default function UsersTable({
   const type = userType === "customers" ? "customers" : userType === "merchants" ? "merchants" : "users";
   const debouncedGlobalFilter = useDebounce(globalFilter, 300);
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
   const loadLazyData = useCallback(() => {
       setLoading(true);
 
       const fetchData = async () => {
         try {
-          const cookies = new Cookies();
-          const token = cookies.get('pettify-token');
-
-          const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-
           const params = new URLSearchParams({
             page: ((lazyState.page ?? 0) + 1).toString(),
             limit: (lazyState.rows).toString(),
@@ -110,6 +110,64 @@ export default function UsersTable({
     loadLazyData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedGlobalFilter, lazyState]);
+
+  const downloadAsCSV = async () => {
+    try {
+      const params = new URLSearchParams({
+        page:"1",
+        limit: "10000",
+      });
+
+      const type = userType === "customers" ? "customers" : userType === "merchants" ? "merchants" : "users";
+      const response = await fetch(`${baseUrl}/api/v1/${type === "customers" ? ENDPOINTS.CUSTOMERS : type === "merchants" ? ENDPOINTS.MERCHANTS : ENDPOINTS.BUYERS}?${params}`, {
+          headers: {
+              Authorization: `Bearer ${token}`,
+          },
+          cache: 'no-store',
+      })
+
+      if (!response.ok) {
+        throw new Error('An error occured.');
+      }
+      
+      const json = await response.json();
+
+      const headers = [
+        "First Name",
+        "Last Name",
+        "Email",
+        "Phone Number",
+        "Delivery Address",
+        "Created At"
+      ]
+
+      const aoa = [headers];
+
+      for(let index = 0; index < json.data.length; index++) {
+        const el = json.data[index];
+
+        let a = Array.from(headers).map((e) => "")
+
+        a[0] = el.firstname;
+        a[1] = el.lastname;
+        a[2] = el.email;
+        a[3] = el.phonenumber;
+        a[4] = el.deliveryAddress;
+        a[5] = el.createdAt;
+
+        aoa.push(a);
+      }
+
+      const ws = utils.aoa_to_sheet(aoa);
+      const wb = utils.book_new();
+      utils.book_append_sheet(wb, ws, "Sheet1");
+
+      const fileName = type === "customers" ? "Customers.xlsx" : type === "merchants" ? "Merchants.xlsx" : "Users.xlsx";
+      writeFile(wb, fileName);
+    } catch(error: any) {
+      toast.error(error.message);
+    }
+  }
 
   const onPage = (event: DataTablePageEvent) => {
     setlazyState(event);
@@ -205,6 +263,18 @@ export default function UsersTable({
             value={globalFilter}
           />
         </div>
+
+        <Button
+          size="small"
+          className="gap-2 w-[90px]"
+          variant="outlined"
+          onClick={() => downloadAsCSV()}
+        >
+          <span>
+            <FaTableCells size={10} />
+          </span>
+          <span>Export</span>
+        </Button>
       </div>
     
       <div className='card rounded-md p-4 bg-white border border-gray-200'>
