@@ -49,6 +49,11 @@ export const adminLinks: ISidebarLink[] = [
     page: `/dashboard/slider-images`
   },
   {
+    name: "push notifications",
+    icon: <IoIosNotifications />,
+    page: `/dashboard/push-notifications`
+  },
+  {
     name: "notifications",
     icon: <IoIosNotifications />,
     page: `/dashboard/notifications`
