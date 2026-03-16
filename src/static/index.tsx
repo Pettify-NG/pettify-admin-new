@@ -58,7 +58,7 @@ export const adminLinks: ISidebarLink[] = [
     icon: <IoIosNotifications />,
     page: `/dashboard/notifications`
   },
-  { name: 'delivery-prices', icon: <IoMdSettings />, page: '/dashboard/delivery-prices' },
+  { name: 'delivery prices', icon: <IoMdSettings />, page: '/dashboard/delivery-prices' },
   { name: 'withdrawal requests', icon: <PiHandWithdrawFill />, page: "/dashboard/withdrawal-requests" }
   // { name: 'notification', icon: <LuMail />, page: '/admin/dashboard/notifications' },
 ];

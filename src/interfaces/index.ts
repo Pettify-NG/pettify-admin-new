@@ -12,4 +12,5 @@ export interface ISlideShows extends SliderImageType {
 export type DeliveryPrices = {
     name: string
     price: string
+    type?: "Accessory" | "Pet"
 }[];
